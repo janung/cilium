@@ -117,6 +117,9 @@ func TestConf(t *testing.T) {
 				}
 
 				return
+			} else if err != nil {
+				t.Errorf("unexpected error from hive: %s", err.Error())
+				t.FailNow()
 			}
 
 			if result.AccelerationMode() != test.accelerationMode {
