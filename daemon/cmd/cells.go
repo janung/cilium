@@ -6,6 +6,7 @@ package cmd
 import (
 	"net/http"
 
+	"github.com/cilium/cilium/pkg/metrics/features"
 	"github.com/cilium/hive/cell"
 	"github.com/cilium/statedb"
 	"github.com/sirupsen/logrus"
@@ -304,6 +305,8 @@ var (
 
 		// Runs the Hubble servers and Hubble metrics.
 		hubble.Cell,
+
+		features.Cell,
 	)
 )
 
