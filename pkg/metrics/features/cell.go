@@ -10,7 +10,9 @@ import (
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
 	"github.com/cilium/cilium/pkg/metrics"
 	"github.com/cilium/cilium/pkg/option"
+	"github.com/cilium/cilium/pkg/policy/api"
 	"github.com/cilium/cilium/pkg/promise"
+	"github.com/cilium/cilium/pkg/redirectpolicy"
 	"github.com/cilium/hive/cell"
 	"github.com/cilium/hive/job"
 )
@@ -25,6 +27,12 @@ var Cell = cell.Module(
 	cell.Invoke(newOrchestrator),
 	cell.Provide(
 		func(m Metrics) featureMetrics {
+			return m
+		},
+		func(m Metrics) api.PolicyMetrics {
+			return m
+		},
+		func(m Metrics) redirectpolicy.LRPMetrics {
 			return m
 		},
 		newOrchestrator,

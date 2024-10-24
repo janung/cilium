@@ -44,7 +44,7 @@ func setupManagerSuite(tb testing.TB) *ManagerSuite {
 		fakePodStore{},
 	}
 	m.epM = &fakeEpManager{}
-	m.rpm = NewRedirectPolicyManager(m.svc, nil, fpr, m.epM)
+	m.rpm = NewRedirectPolicyManager(m.svc, nil, fpr, m.epM, nil)
 	configAddrType = LRPConfig{
 		id: k8s.ServiceID{
 			Name:      "test-foo",
@@ -855,7 +855,7 @@ func TestManager_OnAddRedirectPolicy(t *testing.T) {
 		K8sNamespace: pod.Namespace,
 		NetNsCookie:  1234,
 	}
-	m.rpm = NewRedirectPolicyManager(m.svc, nil, fps, m.epM)
+	m.rpm = NewRedirectPolicyManager(m.svc, nil, fps, m.epM, nil)
 	m.rpm.skipLBMap = &fakeSkipLBMap{lb4Events: lbEvents}
 
 	added, err := m.rpm.AddRedirectPolicy(pc)
@@ -920,7 +920,7 @@ func TestManager_OnAddRedirectPolicy(t *testing.T) {
 			},
 		},
 	}
-	m.rpm = NewRedirectPolicyManager(m.svc, nil, fps, m.epM)
+	m.rpm = NewRedirectPolicyManager(m.svc, nil, fps, m.epM, nil)
 	lbEvents = make(chan skipLBParams)
 	m.rpm.skipLBMap = &fakeSkipLBMap{lb4Events: lbEvents}
 
@@ -984,7 +984,7 @@ func TestManager_OnAddRedirectPolicy(t *testing.T) {
 			Pods: pods,
 		},
 	}
-	m.rpm = NewRedirectPolicyManager(m.svc, nil, fps, m.epM)
+	m.rpm = NewRedirectPolicyManager(m.svc, nil, fps, m.epM, nil)
 	lbEvents = make(chan skipLBParams)
 	m.rpm.skipLBMap = &fakeSkipLBMap{lb4Events: lbEvents}
 

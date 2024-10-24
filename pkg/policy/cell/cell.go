@@ -4,6 +4,7 @@
 package policycell
 
 import (
+	"github.com/cilium/cilium/pkg/policy/api"
 	"github.com/cilium/hive/cell"
 
 	cmtypes "github.com/cilium/cilium/pkg/clustermesh/types"
@@ -34,6 +35,7 @@ type policyRepoParams struct {
 	SecretManager   certificatemanager.SecretManager
 	IdentityManager identitymanager.IDManager
 	ClusterInfo     cmtypes.ClusterInfo
+	MetricsManager  api.PolicyMetrics
 }
 
 func newPolicyRepo(params policyRepoParams) policy.PolicyRepository {
@@ -56,6 +58,7 @@ func newPolicyRepo(params policyRepoParams) policy.PolicyRepository {
 		params.CertManager,
 		params.SecretManager,
 		params.IdentityManager,
+		params.MetricsManager,
 	)
 	policyRepo.SetEnvoyRulesFunc(envoy.GetEnvoyHTTPRules)
 
