@@ -26,20 +26,22 @@ type Metrics struct {
 	NPHostFirewallEnabled        metric.Gauge
 	NPLocalRedirectPolicyEnabled metric.Gauge
 
-	NPL3L4Ingested    metric.Gauge
-	NPL3L4Present     metric.Gauge
-	NPCCNPIngested    metric.Gauge
-	NPCCNPPresent     metric.Gauge
-	NPHostNPIngested  metric.Gauge
-	NPHostNPPresent   metric.Gauge
-	NPDNSIngested     metric.Gauge
-	NPDNSPresent      metric.Gauge
-	NPHTTPIngested    metric.Gauge
-	NPHTTPPresent     metric.Gauge
-	NPOtherL7Ingested metric.Gauge
-	NPOtherL7Present  metric.Gauge
-	NPLRPIngested     metric.Gauge
-	NPLRPPresent      metric.Gauge
+	NPL3L4Ingested         metric.Gauge
+	NPL3L4Present          metric.Gauge
+	NPCCNPIngested         metric.Gauge
+	NPCCNPPresent          metric.Gauge
+	NPHostNPIngested       metric.Gauge
+	NPHostNPPresent        metric.Gauge
+	NPDNSIngested          metric.Gauge
+	NPDNSPresent           metric.Gauge
+	NPHTTPIngested         metric.Gauge
+	NPHTTPPresent          metric.Gauge
+	NPOtherL7Ingested      metric.Gauge
+	NPOtherL7Present       metric.Gauge
+	NPLRPIngested          metric.Gauge
+	NPLRPPresent           metric.Gauge
+	NPDenyPoliciesIngested metric.Gauge
+	NPDenyPoliciesPresent  metric.Gauge
 }
 
 const (
@@ -217,6 +219,18 @@ func newMetrics() Metrics {
 			Help:      "Local Redirect Policies are currently present in the agent",
 			Name:      "local_redirect_policies_present",
 		}),
+
+		NPDenyPoliciesIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Deny Policies have been ingested since the agent started",
+			Name:      "deny_policies_ingested",
+		}),
+
+		NPDenyPoliciesPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Deny Policies are currently present in the agent",
+			Name:      "deny_policies_present",
+		}),
 	}
 }
 
@@ -225,7 +239,7 @@ type featureMetrics interface {
 }
 
 func (m Metrics) AddRule(r api.Rule) {
-	isL3, isHost, isDNS, isHTTP, isOtherL7 := ruleType(r)
+	isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny := ruleType(r)
 
 	if isL3 {
 		m.NPL3L4Ingested.Set(1)
@@ -247,9 +261,13 @@ func (m Metrics) AddRule(r api.Rule) {
 		m.NPOtherL7Ingested.Set(1)
 		m.NPOtherL7Present.Inc()
 	}
+	if isDeny {
+		m.NPDenyPoliciesIngested.Set(1)
+		m.NPDenyPoliciesPresent.Inc()
+	}
 }
 
-func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7 bool) {
+func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny bool) {
 	for _, i := range r.Ingress {
 		if len(i.IngressCommonRule.FromNodes) > 0 {
 			isHost = true
@@ -265,6 +283,7 @@ func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7 bool) {
 
 	if !isL3 || !isHost {
 		for _, i := range r.IngressDeny {
+			isDeny = true
 			if len(i.IngressCommonRule.FromNodes) > 0 {
 				isHost = true
 				isL3 = true
@@ -272,7 +291,7 @@ func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7 bool) {
 			if !isL3 && i.IngressCommonRule.IsL3() {
 				isL3 = true
 			}
-			if isL3 && isHost {
+			if isL3 && isHost && isDeny {
 				break
 			}
 		}
@@ -315,8 +334,9 @@ func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7 bool) {
 		}
 	}
 
-	if !isL3 || !isHost {
+	if !isL3 || !isHost || !isDeny {
 		for _, e := range r.EgressDeny {
+			isDeny = true
 			if len(e.EgressCommonRule.ToNodes) > 0 {
 				isHost = true
 				isL3 = true
@@ -326,7 +346,7 @@ func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7 bool) {
 				isL3 = true
 			}
 
-			if isL3 && isHost {
+			if isL3 && isHost && isDeny {
 				break
 			}
 		}
@@ -335,7 +355,7 @@ func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7 bool) {
 }
 
 func (m Metrics) DelRule(r api.Rule) {
-	isL3, isHost, isDNS, isHTTP, isOtherL7 := ruleType(r)
+	isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny := ruleType(r)
 
 	if isL3 {
 		m.NPL3L4Present.Dec()
@@ -351,6 +371,9 @@ func (m Metrics) DelRule(r api.Rule) {
 	}
 	if isOtherL7 {
 		m.NPOtherL7Present.Dec()
+	}
+	if isDeny {
+		m.NPDenyPoliciesPresent.Dec()
 	}
 }
 
