@@ -60,6 +60,7 @@ type Metrics struct {
 	ACLBTransparentEncryption       metric.Vec[metric.Gauge]
 	ACLBKubeProxyReplacementEnabled metric.Gauge
 	ACLBStandaloneNSLB              metric.Vec[metric.Gauge]
+	ACLBBGPAdvertisementEnabled     metric.Gauge
 }
 
 const (
@@ -382,6 +383,12 @@ func newMetrics() Metrics {
 				option.NodePortAccelerationBestEffort,
 				option.NodePortAccelerationNative,
 			)},
+		}),
+
+		ACLBBGPAdvertisementEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "BGP Advertisement enabled on the agent",
+			Name:      "bgp_advertisement_enabled",
 		}),
 	}
 }
@@ -721,4 +728,8 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 	}
 
 	m.ACLBStandaloneNSLB.WithLabelValues(config.NodePortMode, config.NodePortAlg, config.NodePortAcceleration).Set(1)
+
+	if config.BGPAnnouncePodCIDR || config.BGPAnnounceLBIP {
+		m.ACLBBGPAdvertisementEnabled.Set(1)
+	}
 }
