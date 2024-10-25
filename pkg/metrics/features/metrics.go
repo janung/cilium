@@ -56,12 +56,14 @@ type Metrics struct {
 	NPNonDefaultDenyIngested    metric.Gauge
 	NPNonDefaultDenyPresent     metric.Gauge
 
-	NPCIDRPoliciesToNodes metric.Vec[metric.Gauge]
+	NPCIDRPoliciesToNodes     metric.Vec[metric.Gauge]
+	ACLBTransparentEncryption metric.Vec[metric.Gauge]
 }
 
 const (
-	subsystemDP = "_feature_datapath"
-	subsystemNP = "_feature_network_policies"
+	subsystemDP   = "_feature_datapath"
+	subsystemNP   = "_feature_network_policies"
+	subsystemACLB = "_feature_adv_connect_and_lb"
 )
 
 func newMetrics() Metrics {
@@ -333,6 +335,21 @@ func newMetrics() Metrics {
 			{Name: "mode", Values: metric.NewValues(
 				"world",
 				"remote-node",
+			)},
+		}),
+
+		ACLBTransparentEncryption: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "Encryption mode enabled on the agent",
+			Name:      "transparent_encryption",
+		}, metric.Labels{
+			{Name: "mode", Values: metric.NewValues(
+				"ipsec",
+				"wireguard",
+			)},
+			{Name: "node2node_enabled", Values: metric.NewValues(
+				"true",
+				"false",
 			)},
 		}),
 	}
@@ -656,5 +673,15 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 	}
 	for _, mode := range config.PolicyCIDRMatchMode {
 		m.NPCIDRPoliciesToNodes.WithLabelValues(mode).Set(1)
+	}
+	if config.EnableIPSec {
+		m.ACLBTransparentEncryption.WithLabelValues("ipsec", "false").Set(1)
+	}
+	if config.EnableWireguard {
+		if config.EncryptNode {
+			m.ACLBTransparentEncryption.WithLabelValues("wireguard", "true").Set(1)
+		} else {
+			m.ACLBTransparentEncryption.WithLabelValues("wireguard", "false").Set(1)
+		}
 	}
 }
