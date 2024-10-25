@@ -53,6 +53,8 @@ type Metrics struct {
 	NPSNIAllowListPresent       metric.Gauge
 	NPHTTPHeaderMatchesIngested metric.Gauge
 	NPHTTPHeaderMatchesPresent  metric.Gauge
+	NPNonDefaultDenyIngested    metric.Gauge
+	NPNonDefaultDenyPresent     metric.Gauge
 }
 
 const (
@@ -308,6 +310,18 @@ func newMetrics() Metrics {
 			Help:      "HTTP HeaderMatches Policies are currently present in the agent",
 			Name:      "http_header_matches_policies_present",
 		}),
+
+		NPNonDefaultDenyIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Non DefaultDeny Policies have been ingested since the agent started",
+			Name:      "non_defaultdeny_policies_ingested",
+		}),
+
+		NPNonDefaultDenyPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Non DefaultDeny Policies are currently present in the agent",
+			Name:      "non_defaultdeny_policies_present",
+		}),
 	}
 }
 
@@ -327,6 +341,7 @@ type RuleFeatures struct {
 	TLSInspection     bool
 	SNIAllowList      bool
 	HTTPHeaderMatches bool
+	NonDefaultDeny    bool
 }
 
 func (m Metrics) AddRule(r api.Rule) {
@@ -376,10 +391,17 @@ func (m Metrics) AddRule(r api.Rule) {
 		m.NPHTTPHeaderMatchesIngested.Set(1)
 		m.NPHTTPHeaderMatchesPresent.Inc()
 	}
+	if rf.NonDefaultDeny {
+		m.NPNonDefaultDenyIngested.Set(1)
+		m.NPNonDefaultDenyPresent.Inc()
+	}
 }
 
 func ruleType(r api.Rule) RuleFeatures {
 	var rf RuleFeatures
+
+	rf.NonDefaultDeny = r.EnableDefaultDeny.Ingress != nil || r.EnableDefaultDeny.Egress != nil
+
 	for _, i := range r.Ingress {
 		if len(i.IngressCommonRule.FromNodes) > 0 {
 			rf.Host = true
@@ -556,6 +578,9 @@ func (m Metrics) DelRule(r api.Rule) {
 	}
 	if rf.HTTPHeaderMatches {
 		m.NPHTTPHeaderMatchesPresent.Dec()
+	}
+	if rf.NonDefaultDeny {
+		m.NPNonDefaultDenyPresent.Dec()
 	}
 }
 
