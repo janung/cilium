@@ -26,22 +26,24 @@ type Metrics struct {
 	NPHostFirewallEnabled        metric.Gauge
 	NPLocalRedirectPolicyEnabled metric.Gauge
 
-	NPL3L4Ingested         metric.Gauge
-	NPL3L4Present          metric.Gauge
-	NPCCNPIngested         metric.Gauge
-	NPCCNPPresent          metric.Gauge
-	NPHostNPIngested       metric.Gauge
-	NPHostNPPresent        metric.Gauge
-	NPDNSIngested          metric.Gauge
-	NPDNSPresent           metric.Gauge
-	NPHTTPIngested         metric.Gauge
-	NPHTTPPresent          metric.Gauge
-	NPOtherL7Ingested      metric.Gauge
-	NPOtherL7Present       metric.Gauge
-	NPLRPIngested          metric.Gauge
-	NPLRPPresent           metric.Gauge
-	NPDenyPoliciesIngested metric.Gauge
-	NPDenyPoliciesPresent  metric.Gauge
+	NPL3L4Ingested             metric.Gauge
+	NPL3L4Present              metric.Gauge
+	NPCCNPIngested             metric.Gauge
+	NPCCNPPresent              metric.Gauge
+	NPHostNPIngested           metric.Gauge
+	NPHostNPPresent            metric.Gauge
+	NPDNSIngested              metric.Gauge
+	NPDNSPresent               metric.Gauge
+	NPHTTPIngested             metric.Gauge
+	NPHTTPPresent              metric.Gauge
+	NPOtherL7Ingested          metric.Gauge
+	NPOtherL7Present           metric.Gauge
+	NPLRPIngested              metric.Gauge
+	NPLRPPresent               metric.Gauge
+	NPDenyPoliciesIngested     metric.Gauge
+	NPDenyPoliciesPresent      metric.Gauge
+	NPIngressCIDRGroupIngested metric.Gauge
+	NPIngressCIDRGroupPresent  metric.Gauge
 }
 
 const (
@@ -231,6 +233,18 @@ func newMetrics() Metrics {
 			Help:      "Deny Policies are currently present in the agent",
 			Name:      "deny_policies_present",
 		}),
+
+		NPIngressCIDRGroupIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Ingress CIDR Group Policies have been ingested since the agent started",
+			Name:      "ingress_cidr_group_policies_ingested",
+		}),
+
+		NPIngressCIDRGroupPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Ingress CIDR Group Policies are currently present in the agent",
+			Name:      "ingress_cidr_group_policies_present",
+		}),
 	}
 }
 
@@ -239,7 +253,7 @@ type featureMetrics interface {
 }
 
 func (m Metrics) AddRule(r api.Rule) {
-	isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny := ruleType(r)
+	isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny, isIngressCIDRGroup := ruleType(r)
 
 	if isL3 {
 		m.NPL3L4Ingested.Set(1)
@@ -265,9 +279,13 @@ func (m Metrics) AddRule(r api.Rule) {
 		m.NPDenyPoliciesIngested.Set(1)
 		m.NPDenyPoliciesPresent.Inc()
 	}
+	if isIngressCIDRGroup {
+		m.NPIngressCIDRGroupIngested.Set(1)
+		m.NPIngressCIDRGroupPresent.Inc()
+	}
 }
 
-func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny bool) {
+func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny, isIngressCIDRGroup bool) {
 	for _, i := range r.Ingress {
 		if len(i.IngressCommonRule.FromNodes) > 0 {
 			isHost = true
@@ -287,6 +305,12 @@ func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny bool) 
 			if len(i.IngressCommonRule.FromNodes) > 0 {
 				isHost = true
 				isL3 = true
+			}
+			for _, cidrRuleSet := range i.IngressCommonRule.FromCIDRSet {
+				if cidrRuleSet.CIDRGroupRef != "" {
+					isIngressCIDRGroup = true
+					isL3 = true
+				}
 			}
 			if !isL3 && i.IngressCommonRule.IsL3() {
 				isL3 = true
@@ -355,7 +379,7 @@ func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny bool) 
 }
 
 func (m Metrics) DelRule(r api.Rule) {
-	isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny := ruleType(r)
+	isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny, isIngressCIDRGroup := ruleType(r)
 
 	if isL3 {
 		m.NPL3L4Present.Dec()
@@ -374,6 +398,9 @@ func (m Metrics) DelRule(r api.Rule) {
 	}
 	if isDeny {
 		m.NPDenyPoliciesPresent.Dec()
+	}
+	if isIngressCIDRGroup {
+		m.NPIngressCIDRGroupPresent.Dec()
 	}
 }
 
