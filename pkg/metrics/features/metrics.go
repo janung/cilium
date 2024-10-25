@@ -27,30 +27,32 @@ type Metrics struct {
 	NPLocalRedirectPolicyEnabled metric.Gauge
 	NPMutualAuthEnabled          metric.Gauge
 
-	NPL3L4Ingested             metric.Gauge
-	NPL3L4Present              metric.Gauge
-	NPCCNPIngested             metric.Gauge
-	NPCCNPPresent              metric.Gauge
-	NPHostNPIngested           metric.Gauge
-	NPHostNPPresent            metric.Gauge
-	NPDNSIngested              metric.Gauge
-	NPDNSPresent               metric.Gauge
-	NPHTTPIngested             metric.Gauge
-	NPHTTPPresent              metric.Gauge
-	NPOtherL7Ingested          metric.Gauge
-	NPOtherL7Present           metric.Gauge
-	NPLRPIngested              metric.Gauge
-	NPLRPPresent               metric.Gauge
-	NPDenyPoliciesIngested     metric.Gauge
-	NPDenyPoliciesPresent      metric.Gauge
-	NPIngressCIDRGroupIngested metric.Gauge
-	NPIngressCIDRGroupPresent  metric.Gauge
-	NPMutualAuthIngested       metric.Gauge
-	NPMutualAuthPresent        metric.Gauge
-	NPTLSInspectionIngested    metric.Gauge
-	NPTLSInspectionPresent     metric.Gauge
-	NPSNIAllowListIngested     metric.Gauge
-	NPSNIAllowListPresent      metric.Gauge
+	NPL3L4Ingested              metric.Gauge
+	NPL3L4Present               metric.Gauge
+	NPCCNPIngested              metric.Gauge
+	NPCCNPPresent               metric.Gauge
+	NPHostNPIngested            metric.Gauge
+	NPHostNPPresent             metric.Gauge
+	NPDNSIngested               metric.Gauge
+	NPDNSPresent                metric.Gauge
+	NPHTTPIngested              metric.Gauge
+	NPHTTPPresent               metric.Gauge
+	NPOtherL7Ingested           metric.Gauge
+	NPOtherL7Present            metric.Gauge
+	NPLRPIngested               metric.Gauge
+	NPLRPPresent                metric.Gauge
+	NPDenyPoliciesIngested      metric.Gauge
+	NPDenyPoliciesPresent       metric.Gauge
+	NPIngressCIDRGroupIngested  metric.Gauge
+	NPIngressCIDRGroupPresent   metric.Gauge
+	NPMutualAuthIngested        metric.Gauge
+	NPMutualAuthPresent         metric.Gauge
+	NPTLSInspectionIngested     metric.Gauge
+	NPTLSInspectionPresent      metric.Gauge
+	NPSNIAllowListIngested      metric.Gauge
+	NPSNIAllowListPresent       metric.Gauge
+	NPHTTPHeaderMatchesIngested metric.Gauge
+	NPHTTPHeaderMatchesPresent  metric.Gauge
 }
 
 const (
@@ -294,6 +296,18 @@ func newMetrics() Metrics {
 			Help:      "SNI Allow List Policies are currently present in the agent",
 			Name:      "sni_allow_list_policies_present",
 		}),
+
+		NPHTTPHeaderMatchesIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "HTTP HeaderMatches Policies have been ingested since the agent started",
+			Name:      "http_header_matches_policies_ingested",
+		}),
+
+		NPHTTPHeaderMatchesPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "HTTP HeaderMatches Policies are currently present in the agent",
+			Name:      "http_header_matches_policies_present",
+		}),
 	}
 }
 
@@ -302,16 +316,17 @@ type featureMetrics interface {
 }
 
 type RuleFeatures struct {
-	L3               bool
-	Host             bool
-	DNS              bool
-	HTTP             bool
-	OtherL7          bool
-	Deny             bool
-	IngressCIDRGroup bool
-	MutualAuth       bool
-	TLSInspection    bool
-	SNIAllowList     bool
+	L3                bool
+	Host              bool
+	DNS               bool
+	HTTP              bool
+	OtherL7           bool
+	Deny              bool
+	IngressCIDRGroup  bool
+	MutualAuth        bool
+	TLSInspection     bool
+	SNIAllowList      bool
+	HTTPHeaderMatches bool
 }
 
 func (m Metrics) AddRule(r api.Rule) {
@@ -357,6 +372,10 @@ func (m Metrics) AddRule(r api.Rule) {
 		m.NPSNIAllowListIngested.Set(1)
 		m.NPSNIAllowListPresent.Inc()
 	}
+	if rf.HTTPHeaderMatches {
+		m.NPHTTPHeaderMatchesIngested.Set(1)
+		m.NPHTTPHeaderMatchesPresent.Inc()
+	}
 }
 
 func ruleType(r api.Rule) RuleFeatures {
@@ -379,6 +398,26 @@ func ruleType(r api.Rule) RuleFeatures {
 				}
 				if !rf.SNIAllowList && len(p.ServerNames) != 0 {
 					rf.SNIAllowList = true
+				}
+				// We shouldn't accept such rules
+				// if len(p.Rules.DNS) > 0 {
+				// 	rf.DNS = true
+				// }
+				if len(p.Rules.HTTP) > 0 {
+					rf.HTTP = true
+					if !rf.HTTPHeaderMatches {
+						for _, httpRule := range p.Rules.HTTP {
+							if len(httpRule.HeaderMatches) > 0 {
+								rf.HTTPHeaderMatches = true
+							}
+						}
+					}
+				}
+				if len(p.Rules.L7) > 0 || len(p.Rules.Kafka) > 0 {
+					rf.OtherL7 = true
+				}
+				if rf.DNS && rf.HTTP && rf.OtherL7 && rf.TLSInspection && rf.SNIAllowList && rf.HTTPHeaderMatches {
+					break
 				}
 			}
 		}
@@ -420,7 +459,7 @@ func ruleType(r api.Rule) RuleFeatures {
 				rf.L3 = true
 			}
 
-			if !rf.DNS || !rf.HTTP || !rf.OtherL7 || !rf.TLSInspection || !rf.SNIAllowList {
+			if !rf.DNS || !rf.HTTP || !rf.OtherL7 || !rf.TLSInspection || !rf.SNIAllowList || !rf.HTTPHeaderMatches {
 				if len(e.ToFQDNs) > 0 {
 					rf.DNS = true
 				}
@@ -436,11 +475,18 @@ func ruleType(r api.Rule) RuleFeatures {
 					}
 					if len(p.Rules.HTTP) > 0 {
 						rf.HTTP = true
+						if !rf.HTTPHeaderMatches {
+							for _, httpRule := range p.Rules.HTTP {
+								if len(httpRule.HeaderMatches) > 0 {
+									rf.HTTPHeaderMatches = true
+								}
+							}
+						}
 					}
 					if len(p.Rules.L7) > 0 || len(p.Rules.Kafka) > 0 {
 						rf.OtherL7 = true
 					}
-					if rf.DNS && rf.HTTP && rf.OtherL7 && rf.TLSInspection && rf.SNIAllowList {
+					if rf.DNS && rf.HTTP && rf.OtherL7 && rf.TLSInspection && rf.SNIAllowList && rf.HTTPHeaderMatches {
 						break
 					}
 				}
@@ -507,6 +553,9 @@ func (m Metrics) DelRule(r api.Rule) {
 	}
 	if rf.SNIAllowList {
 		m.NPSNIAllowListPresent.Dec()
+	}
+	if rf.HTTPHeaderMatches {
+		m.NPHTTPHeaderMatchesPresent.Dec()
 	}
 }
 
