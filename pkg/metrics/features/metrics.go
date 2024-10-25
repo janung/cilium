@@ -61,6 +61,7 @@ type Metrics struct {
 	ACLBKubeProxyReplacementEnabled metric.Gauge
 	ACLBStandaloneNSLB              metric.Vec[metric.Gauge]
 	ACLBBGPAdvertisementEnabled     metric.Gauge
+	ACLBIPAMEnabled                 metric.Gauge
 }
 
 const (
@@ -389,6 +390,12 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "BGP Advertisement enabled on the agent",
 			Name:      "bgp_advertisement_enabled",
+		}),
+
+		ACLBIPAMEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "LB IPAM enabled on the agent",
+			Name:      "lb_ipam_enabled",
 		}),
 	}
 }
@@ -731,5 +738,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if config.BGPAnnouncePodCIDR || config.BGPAnnounceLBIP {
 		m.ACLBBGPAdvertisementEnabled.Set(1)
+	}
+
+	if params.LBIPAM.IsEnabled() {
+		m.ACLBIPAMEnabled.Set(1)
 	}
 }
