@@ -55,6 +55,8 @@ type Metrics struct {
 	NPHTTPHeaderMatchesPresent  metric.Gauge
 	NPNonDefaultDenyIngested    metric.Gauge
 	NPNonDefaultDenyPresent     metric.Gauge
+
+	NPCIDRPoliciesToNodes metric.Vec[metric.Gauge]
 }
 
 const (
@@ -321,6 +323,17 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Non DefaultDeny Policies are currently present in the agent",
 			Name:      "non_defaultdeny_policies_present",
+		}),
+
+		NPCIDRPoliciesToNodes: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Mode to apply CIDR Policies",
+			Name:      "cidr_policies",
+		}, metric.Labels{
+			{Name: "mode", Values: metric.NewValues(
+				"world",
+				"remote-node",
+			)},
 		}),
 	}
 }
@@ -640,5 +653,8 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 	}
 	if params.MutualAuth.IsEnabled() {
 		m.NPMutualAuthEnabled.Set(1)
+	}
+	for _, mode := range config.PolicyCIDRMatchMode {
+		m.NPCIDRPoliciesToNodes.WithLabelValues(mode).Set(1)
 	}
 }
