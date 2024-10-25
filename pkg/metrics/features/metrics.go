@@ -59,6 +59,7 @@ type Metrics struct {
 	NPCIDRPoliciesToNodes           metric.Vec[metric.Gauge]
 	ACLBTransparentEncryption       metric.Vec[metric.Gauge]
 	ACLBKubeProxyReplacementEnabled metric.Gauge
+	ACLBStandaloneNSLB              metric.Vec[metric.Gauge]
 }
 
 const (
@@ -358,6 +359,29 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "KubeProxyReplacement enabled on the agent",
 			Name:      "kube_proxy_replacement_enabled",
+		}),
+
+		ACLBStandaloneNSLB: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "Standalone North-South Load Balancer configuration enabled on the agent",
+			Name:      "standalone_ns_lb",
+		}, metric.Labels{
+			{Name: "mode", Values: metric.NewValues(
+				option.NodePortModeSNAT,
+				option.NodePortModeDSR,
+				option.NodePortModeAnnotation,
+				option.NodePortModeHybrid,
+			)},
+			{Name: "algorithm", Values: metric.NewValues(
+				option.NodePortAlgMaglev,
+				option.NodePortAlgRandom,
+			)},
+			{Name: "acceleration", Values: metric.NewValues(
+				option.NodePortAccelerationDisabled,
+				option.NodePortAccelerationGeneric,
+				option.NodePortAccelerationBestEffort,
+				option.NodePortAccelerationNative,
+			)},
 		}),
 	}
 }
@@ -695,4 +719,6 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 	if config.KubeProxyReplacement == option.KubeProxyReplacementTrue {
 		m.ACLBKubeProxyReplacementEnabled.Set(1)
 	}
+
+	m.ACLBStandaloneNSLB.WithLabelValues(config.NodePortMode, config.NodePortAlg, config.NodePortAcceleration).Set(1)
 }
