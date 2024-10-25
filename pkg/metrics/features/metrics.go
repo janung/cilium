@@ -25,6 +25,7 @@ type Metrics struct {
 
 	NPHostFirewallEnabled        metric.Gauge
 	NPLocalRedirectPolicyEnabled metric.Gauge
+	NPMutualAuthEnabled          metric.Gauge
 
 	NPL3L4Ingested             metric.Gauge
 	NPL3L4Present              metric.Gauge
@@ -44,6 +45,8 @@ type Metrics struct {
 	NPDenyPoliciesPresent      metric.Gauge
 	NPIngressCIDRGroupIngested metric.Gauge
 	NPIngressCIDRGroupPresent  metric.Gauge
+	NPMutualAuthIngested       metric.Gauge
+	NPMutualAuthPresent        metric.Gauge
 }
 
 const (
@@ -136,6 +139,12 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Local Redirect Policy enabled on the agent",
 			Name:      "local_redirect_policy_enabled",
+		}),
+
+		NPMutualAuthEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Mutual Auth enabled on the agent",
+			Name:      "mutual_auth_enabled",
 		}),
 
 		NPL3L4Ingested: metric.NewGauge(metric.GaugeOpts{
@@ -245,6 +254,18 @@ func newMetrics() Metrics {
 			Help:      "Ingress CIDR Group Policies are currently present in the agent",
 			Name:      "ingress_cidr_group_policies_present",
 		}),
+
+		NPMutualAuthIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Mutual Auth Policies have been ingested since the agent started",
+			Name:      "mutual_auth_policies_ingested",
+		}),
+
+		NPMutualAuthPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Mutual Auth Policies are currently present in the agent",
+			Name:      "mutual_auth_policies_present",
+		}),
 	}
 }
 
@@ -252,155 +273,180 @@ type featureMetrics interface {
 	updateMetrics(params featuresParams, config *option.DaemonConfig)
 }
 
-func (m Metrics) AddRule(r api.Rule) {
-	isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny, isIngressCIDRGroup := ruleType(r)
+type RuleFeatures struct {
+	L3               bool
+	Host             bool
+	DNS              bool
+	HTTP             bool
+	OtherL7          bool
+	Deny             bool
+	IngressCIDRGroup bool
+	MutualAuth       bool
+}
 
-	if isL3 {
+func (m Metrics) AddRule(r api.Rule) {
+	rf := ruleType(r)
+
+	if rf.L3 {
 		m.NPL3L4Ingested.Set(1)
 		m.NPL3L4Present.Inc()
 	}
-	if isHost {
+	if rf.Host {
 		m.NPHostNPIngested.Set(1)
 		m.NPHostNPPresent.Inc()
 	}
-	if isDNS {
+	if rf.DNS {
 		m.NPDNSIngested.Set(1)
 		m.NPDNSPresent.Inc()
 	}
-	if isHTTP {
+	if rf.HTTP {
 		m.NPHTTPIngested.Set(1)
 		m.NPHTTPPresent.Inc()
 	}
-	if isOtherL7 {
+	if rf.OtherL7 {
 		m.NPOtherL7Ingested.Set(1)
 		m.NPOtherL7Present.Inc()
 	}
-	if isDeny {
+	if rf.Deny {
 		m.NPDenyPoliciesIngested.Set(1)
 		m.NPDenyPoliciesPresent.Inc()
 	}
-	if isIngressCIDRGroup {
+	if rf.IngressCIDRGroup {
 		m.NPIngressCIDRGroupIngested.Set(1)
 		m.NPIngressCIDRGroupPresent.Inc()
 	}
+	if rf.MutualAuth {
+		m.NPMutualAuthIngested.Set(1)
+		m.NPMutualAuthPresent.Inc()
+	}
 }
 
-func ruleType(r api.Rule) (isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny, isIngressCIDRGroup bool) {
+func ruleType(r api.Rule) RuleFeatures {
+	var rf RuleFeatures
 	for _, i := range r.Ingress {
 		if len(i.IngressCommonRule.FromNodes) > 0 {
-			isHost = true
-			isL3 = true
+			rf.Host = true
+			rf.L3 = true
 		}
-		if !isL3 && i.IngressCommonRule.IsL3() {
-			isL3 = true
+		if !rf.L3 && i.IngressCommonRule.IsL3() {
+			rf.L3 = true
 		}
-		if isL3 && isHost {
+		if i.Authentication != nil {
+			rf.MutualAuth = true
+		}
+		if rf.L3 && rf.Host && rf.MutualAuth {
 			break
 		}
 	}
 
-	if !isL3 || !isHost {
+	if !rf.L3 || !rf.Host {
 		for _, i := range r.IngressDeny {
-			isDeny = true
+			rf.Deny = true
 			if len(i.IngressCommonRule.FromNodes) > 0 {
-				isHost = true
-				isL3 = true
+				rf.Host = true
+				rf.L3 = true
 			}
 			for _, cidrRuleSet := range i.IngressCommonRule.FromCIDRSet {
 				if cidrRuleSet.CIDRGroupRef != "" {
-					isIngressCIDRGroup = true
-					isL3 = true
+					rf.IngressCIDRGroup = true
+					rf.L3 = true
 				}
 			}
-			if !isL3 && i.IngressCommonRule.IsL3() {
-				isL3 = true
+			if !rf.L3 && i.IngressCommonRule.IsL3() {
+				rf.L3 = true
 			}
-			if isL3 && isHost && isDeny {
+			if rf.L3 && rf.Host && rf.Deny {
 				break
 			}
 		}
 	}
 
-	if !isL3 || !isHost {
+	if !rf.L3 || !rf.Host {
 		for _, e := range r.Egress {
 			if len(e.EgressCommonRule.ToNodes) > 0 {
-				isHost = true
-				isL3 = true
+				rf.Host = true
+				rf.L3 = true
 			}
 
-			if !isL3 && e.EgressCommonRule.IsL3() {
-				isL3 = true
+			if !rf.L3 && e.EgressCommonRule.IsL3() {
+				rf.L3 = true
 			}
 
-			if !isDNS || !isHTTP || !isOtherL7 {
+			if !rf.DNS || !rf.HTTP || !rf.OtherL7 {
 				if len(e.ToFQDNs) > 0 {
-					isDNS = true
+					rf.DNS = true
 				}
 				for _, p := range e.ToPorts {
 					if len(p.Rules.DNS) > 0 {
-						isDNS = true
+						rf.DNS = true
 					}
 					if len(p.Rules.HTTP) > 0 {
-						isHTTP = true
+						rf.HTTP = true
 					}
 					if len(p.Rules.L7) > 0 || len(p.Rules.Kafka) > 0 {
-						isOtherL7 = true
+						rf.OtherL7 = true
 					}
-					if isDNS && isHTTP && isOtherL7 {
+					if rf.DNS && rf.HTTP && rf.OtherL7 {
 						break
 					}
 				}
 			}
+			if e.Authentication != nil {
+				rf.MutualAuth = true
+			}
 
-			if isL3 && isHost && isDNS && isHTTP && isOtherL7 {
+			if rf.L3 && rf.Host && rf.DNS && rf.HTTP && rf.OtherL7 && rf.MutualAuth {
 				break
 			}
 		}
 	}
 
-	if !isL3 || !isHost || !isDeny {
+	if !rf.L3 || !rf.Host || !rf.Deny {
 		for _, e := range r.EgressDeny {
-			isDeny = true
+			rf.Deny = true
 			if len(e.EgressCommonRule.ToNodes) > 0 {
-				isHost = true
-				isL3 = true
+				rf.Host = true
+				rf.L3 = true
 			}
 
-			if !isL3 && e.EgressCommonRule.IsL3() {
-				isL3 = true
+			if !rf.L3 && e.EgressCommonRule.IsL3() {
+				rf.L3 = true
 			}
 
-			if isL3 && isHost && isDeny {
+			if rf.L3 && rf.Host && rf.Deny {
 				break
 			}
 		}
 	}
-	return
+	return rf
 }
 
 func (m Metrics) DelRule(r api.Rule) {
-	isL3, isHost, isDNS, isHTTP, isOtherL7, isDeny, isIngressCIDRGroup := ruleType(r)
+	rf := ruleType(r)
 
-	if isL3 {
+	if rf.L3 {
 		m.NPL3L4Present.Dec()
 	}
-	if isHost {
+	if rf.Host {
 		m.NPHostNPPresent.Dec()
 	}
-	if isDNS {
+	if rf.DNS {
 		m.NPDNSPresent.Dec()
 	}
-	if isHTTP {
+	if rf.HTTP {
 		m.NPHTTPPresent.Dec()
 	}
-	if isOtherL7 {
+	if rf.OtherL7 {
 		m.NPOtherL7Present.Dec()
 	}
-	if isDeny {
+	if rf.Deny {
 		m.NPDenyPoliciesPresent.Dec()
 	}
-	if isIngressCIDRGroup {
+	if rf.IngressCIDRGroup {
 		m.NPIngressCIDRGroupPresent.Dec()
+	}
+	if rf.MutualAuth {
+		m.NPMutualAuthPresent.Dec()
 	}
 }
 
@@ -457,5 +503,8 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 	}
 	if config.EnableLocalRedirectPolicy {
 		m.NPLocalRedirectPolicyEnabled.Set(1)
+	}
+	if params.MutualAuth.IsEnabled() {
+		m.NPMutualAuthEnabled.Set(1)
 	}
 }
