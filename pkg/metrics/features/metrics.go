@@ -47,6 +47,8 @@ type Metrics struct {
 	NPIngressCIDRGroupPresent  metric.Gauge
 	NPMutualAuthIngested       metric.Gauge
 	NPMutualAuthPresent        metric.Gauge
+	NPTLSInspectionIngested    metric.Gauge
+	NPTLSInspectionPresent     metric.Gauge
 }
 
 const (
@@ -266,6 +268,18 @@ func newMetrics() Metrics {
 			Help:      "Mutual Auth Policies are currently present in the agent",
 			Name:      "mutual_auth_policies_present",
 		}),
+
+		NPTLSInspectionIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "TLS Inspection Policies have been ingested since the agent started",
+			Name:      "tls_inspection_policies_ingested",
+		}),
+
+		NPTLSInspectionPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "TLS Inspection Policies are currently present in the agent",
+			Name:      "tls_inspection_policies_present",
+		}),
 	}
 }
 
@@ -282,6 +296,7 @@ type RuleFeatures struct {
 	Deny             bool
 	IngressCIDRGroup bool
 	MutualAuth       bool
+	TLSInspection    bool
 }
 
 func (m Metrics) AddRule(r api.Rule) {
@@ -319,6 +334,10 @@ func (m Metrics) AddRule(r api.Rule) {
 		m.NPMutualAuthIngested.Set(1)
 		m.NPMutualAuthPresent.Inc()
 	}
+	if rf.TLSInspection {
+		m.NPTLSInspectionIngested.Set(1)
+		m.NPTLSInspectionPresent.Inc()
+	}
 }
 
 func ruleType(r api.Rule) RuleFeatures {
@@ -334,7 +353,14 @@ func ruleType(r api.Rule) RuleFeatures {
 		if i.Authentication != nil {
 			rf.MutualAuth = true
 		}
-		if rf.L3 && rf.Host && rf.MutualAuth {
+		if !rf.TLSInspection {
+			for _, p := range i.ToPorts {
+				if p.OriginatingTLS != nil || p.TerminatingTLS != nil {
+					rf.TLSInspection = true
+				}
+			}
+		}
+		if rf.L3 && rf.Host && rf.MutualAuth && rf.TLSInspection {
 			break
 		}
 	}
@@ -372,11 +398,14 @@ func ruleType(r api.Rule) RuleFeatures {
 				rf.L3 = true
 			}
 
-			if !rf.DNS || !rf.HTTP || !rf.OtherL7 {
+			if !rf.DNS || !rf.HTTP || !rf.OtherL7 || !rf.TLSInspection {
 				if len(e.ToFQDNs) > 0 {
 					rf.DNS = true
 				}
 				for _, p := range e.ToPorts {
+					if !rf.TLSInspection && (p.OriginatingTLS != nil || p.TerminatingTLS != nil) {
+						rf.TLSInspection = true
+					}
 					if len(p.Rules.DNS) > 0 {
 						rf.DNS = true
 					}
@@ -386,7 +415,7 @@ func ruleType(r api.Rule) RuleFeatures {
 					if len(p.Rules.L7) > 0 || len(p.Rules.Kafka) > 0 {
 						rf.OtherL7 = true
 					}
-					if rf.DNS && rf.HTTP && rf.OtherL7 {
+					if rf.DNS && rf.HTTP && rf.OtherL7 && rf.TLSInspection {
 						break
 					}
 				}
@@ -395,7 +424,7 @@ func ruleType(r api.Rule) RuleFeatures {
 				rf.MutualAuth = true
 			}
 
-			if rf.L3 && rf.Host && rf.DNS && rf.HTTP && rf.OtherL7 && rf.MutualAuth {
+			if rf.L3 && rf.Host && rf.DNS && rf.HTTP && rf.OtherL7 && rf.MutualAuth && rf.TLSInspection {
 				break
 			}
 		}
@@ -447,6 +476,9 @@ func (m Metrics) DelRule(r api.Rule) {
 	}
 	if rf.MutualAuth {
 		m.NPMutualAuthPresent.Dec()
+	}
+	if rf.TLSInspection {
+		m.NPTLSInspectionPresent.Dec()
 	}
 }
 
