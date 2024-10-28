@@ -9,6 +9,7 @@ import (
 	"github.com/cilium/cilium/daemon/cmd/cni"
 	"github.com/cilium/cilium/pkg/auth"
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
+	"github.com/cilium/cilium/pkg/datapath/types"
 	"github.com/cilium/cilium/pkg/metrics"
 	"github.com/cilium/cilium/pkg/option"
 	"github.com/cilium/cilium/pkg/policy/api"
@@ -54,4 +55,5 @@ type featuresParams struct {
 	TunnelConfig     tunnel.Config
 	CNIConfigManager cni.CNIConfigManager
 	MutualAuth       auth.MeshAuthConfig
+	BandwidthManager types.BandwidthManager
 }
