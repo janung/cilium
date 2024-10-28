@@ -14,6 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	features "github.com/cilium/cilium/pkg/metrics/features/operator"
 	"github.com/cilium/hive/cell"
 
 	"github.com/cilium/cilium/operator/doublewrite"
@@ -268,6 +269,8 @@ var (
 			// corresponding ClusterIP, without depending on CoreDNS. Leveraged by etcd
 			// and clustermesh.
 			dial.ServiceResolverCell,
+
+			features.Cell,
 		),
 	)
 

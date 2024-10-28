@@ -7,7 +7,6 @@ import (
 	"log/slog"
 
 	"github.com/cilium/cilium/daemon/cmd/cni"
-	"github.com/cilium/cilium/operator/pkg/lbipam"
 	"github.com/cilium/cilium/pkg/auth"
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
 	"github.com/cilium/cilium/pkg/metrics"
@@ -55,5 +54,4 @@ type featuresParams struct {
 	TunnelConfig     tunnel.Config
 	CNIConfigManager cni.CNIConfigManager
 	MutualAuth       auth.MeshAuthConfig
-	LBIPAM           lbipam.Config
 }
