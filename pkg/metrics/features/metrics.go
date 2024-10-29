@@ -63,6 +63,7 @@ type Metrics struct {
 	ACLBBGPAdvertisementEnabled     metric.Counter
 	ACLBEgressGatewayEnabled        metric.Counter
 	ACLBBandwidthManagerEnabled     metric.Counter
+	ACLBSRv6Enabled                 metric.Counter
 }
 
 const (
@@ -403,6 +404,12 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Bandwidth Manager enabled on the agent",
 			Name:      "bandwidth_manager_enabled",
+		}),
+
+		ACLBSRv6Enabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "SRv6 enabled on the agent",
+			Name:      "srv6_enabled",
 		}),
 	}
 }
@@ -785,5 +792,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if params.BandwidthManager.Enabled() {
 		m.ACLBBandwidthManagerEnabled.Add(1)
+	}
+
+	if config.EnableSRv6 {
+		m.ACLBSRv6Enabled.Add(1)
 	}
 }
