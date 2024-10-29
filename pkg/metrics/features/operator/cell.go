@@ -6,6 +6,7 @@ package features
 import (
 	"log/slog"
 
+	operatorOption "github.com/cilium/cilium/operator/option"
 	"github.com/cilium/cilium/operator/pkg/ingress"
 	"github.com/cilium/cilium/operator/pkg/lbipam"
 	"github.com/cilium/cilium/pkg/metrics"
@@ -41,4 +42,6 @@ type featuresParams struct {
 
 	LBIPAM            lbipam.Config
 	IngressController ingress.IngressConfig
+
+	OperatorOpts *operatorOption.OperatorConfig
 }

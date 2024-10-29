@@ -11,6 +11,7 @@ import (
 type Metrics struct {
 	ACLBIPAMEnabled              metric.Counter
 	ACLBIngressControllerEnabled metric.Counter
+	ACLBGatewayAPIEnabled        metric.Counter
 }
 
 const (
@@ -30,6 +31,12 @@ func newMetrics() Metrics {
 			Help:      "IngressController enabled on the operator",
 			Name:      "ingress_controller_enabled",
 		}),
+
+		ACLBGatewayAPIEnabled: metric.NewCounter(metric.CounterOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "GatewayAPI enabled on the operator",
+			Name:      "gateway_api_enabled",
+		}),
 	}
 }
 
@@ -43,5 +50,8 @@ func (m Metrics) updateMetrics(params featuresParams) {
 	}
 	if params.IngressController.IsEnabled() {
 		m.ACLBIngressControllerEnabled.Add(1)
+	}
+	if params.OperatorOpts.EnableGatewayAPI {
+		m.ACLBGatewayAPIEnabled.Add(1)
 	}
 }
