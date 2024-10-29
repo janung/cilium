@@ -12,6 +12,7 @@ import (
 	"github.com/cilium/cilium/pkg/datapath/linux/bigtcp"
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
 	"github.com/cilium/cilium/pkg/datapath/types"
+	"github.com/cilium/cilium/pkg/dynamicconfig"
 	"github.com/cilium/cilium/pkg/k8s"
 	"github.com/cilium/cilium/pkg/metrics"
 	"github.com/cilium/cilium/pkg/option"
@@ -61,9 +62,10 @@ type featuresParams struct {
 	ConfigPromise promise.Promise[*option.DaemonConfig]
 	Metrics       featureMetrics
 
-	TunnelConfig     tunnel.Config
-	CNIConfigManager cni.CNIConfigManager
-	MutualAuth       auth.MeshAuthConfig
-	BandwidthManager types.BandwidthManager
-	BigTCP           bigtcp.Config
+	TunnelConfig        tunnel.Config
+	CNIConfigManager    cni.CNIConfigManager
+	MutualAuth          auth.MeshAuthConfig
+	BandwidthManager    types.BandwidthManager
+	BigTCP              bigtcp.Config
+	DynamicConfigSource dynamicconfig.ConfigSource
 }

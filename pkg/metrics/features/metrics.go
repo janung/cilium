@@ -80,6 +80,7 @@ type Metrics struct {
 	ACLBBigTCPEnabled                        metric.Vec[metric.Counter]
 	ACLBL2LBEnabled                          metric.Counter
 	ACLBExternalEnvoyProxyEnabled            metric.Vec[metric.Counter]
+	ACLBCiliumNodeConfigEnabled              metric.Counter
 }
 
 const (
@@ -508,6 +509,12 @@ func newMetrics() Metrics {
 			Name:      "envoy_proxy_enabled",
 		}, metric.Labels{
 			{Name: "mode", Values: metric.NewValues("standalone", "embedded")},
+		}),
+
+		ACLBCiliumNodeConfigEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "Cilium Node Config enabled on the agent",
+			Name:      "cilium_node_config_enabled",
 		}),
 	}
 }
@@ -971,5 +978,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 		m.ACLBExternalEnvoyProxyEnabled.WithLabelValues("standalone").Add(1)
 	} else {
 		m.ACLBExternalEnvoyProxyEnabled.WithLabelValues("embedded").Add(1)
+	}
+
+	if params.DynamicConfigSource.IsNodeConfig() {
+		m.ACLBCiliumNodeConfigEnabled.Add(1)
 	}
 }
