@@ -78,6 +78,7 @@ type Metrics struct {
 	ACLBCiliumClusterwideEnvoyConfigPresent  metric.Gauge
 	ACLBVTEPEnabled                          metric.Counter
 	ACLBBigTCPEnabled                        metric.Vec[metric.Counter]
+	ACLBL2LBEnabled                          metric.Counter
 }
 
 const (
@@ -492,6 +493,12 @@ func newMetrics() Metrics {
 			Name:      "big_tcp_enabled",
 		}, metric.Labels{
 			{Name: "protocol", Values: metric.NewValues("ipv4-only", "ipv6-only", "ipv4-ipv6-dual-stack")},
+		}),
+
+		ACLBL2LBEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "L2 LB announcement enabled on the agent",
+			Name:      "l2_lb_enabled",
 		}),
 	}
 }
@@ -945,5 +952,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if ip != "" {
 		m.ACLBBigTCPEnabled.WithLabelValues(ip).Add(1)
+	}
+
+	if config.EnableL2Announcements {
+		m.ACLBL2LBEnabled.Add(1)
 	}
 }
