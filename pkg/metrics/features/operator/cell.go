@@ -10,6 +10,7 @@ import (
 	ciliumenvoyconfig2 "github.com/cilium/cilium/operator/pkg/ciliumenvoyconfig"
 	"github.com/cilium/cilium/operator/pkg/ingress"
 	"github.com/cilium/cilium/operator/pkg/lbipam"
+	"github.com/cilium/cilium/operator/pkg/nodeipam"
 	"github.com/cilium/cilium/pkg/metrics"
 	"github.com/cilium/hive/cell"
 	"github.com/cilium/hive/job"
@@ -44,6 +45,7 @@ type featuresParams struct {
 	LBIPAM            lbipam.Config
 	IngressController ingress.IngressConfig
 	LBConfig          ciliumenvoyconfig2.LoadBalancerConfig
+	NodeIPAM          nodeipam.NodeIPAMConfig
 
 	OperatorOpts *operatorOption.OperatorConfig
 }

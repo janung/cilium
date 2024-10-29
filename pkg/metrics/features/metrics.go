@@ -79,6 +79,7 @@ type Metrics struct {
 	ACLBVTEPEnabled                          metric.Counter
 	ACLBBigTCPEnabled                        metric.Vec[metric.Counter]
 	ACLBL2LBEnabled                          metric.Counter
+	ACLBExternalEnvoyProxyEnabled            metric.Vec[metric.Counter]
 }
 
 const (
@@ -499,6 +500,14 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "L2 LB announcement enabled on the agent",
 			Name:      "l2_lb_enabled",
+		}),
+
+		ACLBExternalEnvoyProxyEnabled: metric.NewCounterVecWithLabels(metric.CounterOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "Envoy Proxy mode enabled on the agent",
+			Name:      "envoy_proxy_enabled",
+		}, metric.Labels{
+			{Name: "mode", Values: metric.NewValues("standalone", "embedded")},
 		}),
 	}
 }
@@ -956,5 +965,11 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if config.EnableL2Announcements {
 		m.ACLBL2LBEnabled.Add(1)
+	}
+
+	if config.ExternalEnvoyProxy {
+		m.ACLBExternalEnvoyProxyEnabled.WithLabelValues("standalone").Add(1)
+	} else {
+		m.ACLBExternalEnvoyProxyEnabled.WithLabelValues("embedded").Add(1)
 	}
 }

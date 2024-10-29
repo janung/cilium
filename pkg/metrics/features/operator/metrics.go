@@ -13,6 +13,7 @@ type Metrics struct {
 	ACLBIngressControllerEnabled        metric.Counter
 	ACLBGatewayAPIEnabled               metric.Counter
 	ACLBL7AwareTrafficManagementEnabled metric.Counter
+	ACLBNodeIPAMEnabled                 metric.Counter
 }
 
 const (
@@ -44,6 +45,12 @@ func newMetrics() Metrics {
 			Help:      "L7 Aware Traffic Management enabled on the operator",
 			Name:      "l7_aware_traffic_management_enabled",
 		}),
+
+		ACLBNodeIPAMEnabled: metric.NewCounter(metric.CounterOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "Node IPAM enabled on the operator",
+			Name:      "node_ipam_enabled",
+		}),
 	}
 }
 
@@ -63,5 +70,8 @@ func (m Metrics) updateMetrics(params featuresParams) {
 	}
 	if params.LBConfig.GetLoadBalancerL7() == "envoy" {
 		m.ACLBL7AwareTrafficManagementEnabled.Add(1)
+	}
+	if params.NodeIPAM.IsEnabled() {
+		m.ACLBNodeIPAMEnabled.Add(1)
 	}
 }
