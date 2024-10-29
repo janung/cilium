@@ -513,6 +513,12 @@ func ruleType(r api.Rule) RuleFeatures {
 			rf.Host = true
 			rf.L3 = true
 		}
+		for _, cidrRuleSet := range i.IngressCommonRule.FromCIDRSet {
+			if cidrRuleSet.CIDRGroupRef != "" {
+				rf.IngressCIDRGroup = true
+				rf.L3 = true
+			}
+		}
 		if !rf.L3 && i.IngressCommonRule.IsL3() {
 			rf.L3 = true
 		}
