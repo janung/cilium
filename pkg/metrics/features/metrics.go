@@ -76,6 +76,7 @@ type Metrics struct {
 	ACLBCiliumEnvoyConfigPresent             metric.Gauge
 	ACLBCiliumClusterwideEnvoyConfigIngested metric.Counter
 	ACLBCiliumClusterwideEnvoyConfigPresent  metric.Gauge
+	ACLBVTEPEnabled                          metric.Counter
 }
 
 const (
@@ -476,6 +477,12 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Cilium Clusterwide Envoy Config are currently present in the agent",
 			Name:      "cilium_clusterwide_envoy_config_present",
+		}),
+
+		ACLBVTEPEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "VTEP enabled on the agent",
+			Name:      "vtep_enabled",
 		}),
 	}
 }
@@ -911,5 +918,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if config.EnableEnvoyConfig {
 		m.ACLBCiliumEnvoyConfigEnabled.Add(1)
+	}
+
+	if config.EnableVTEP {
+		m.ACLBVTEPEnabled.Add(1)
 	}
 }
