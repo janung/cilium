@@ -64,6 +64,7 @@ type Metrics struct {
 	ACLBEgressGatewayEnabled        metric.Counter
 	ACLBBandwidthManagerEnabled     metric.Counter
 	ACLBSRv6Enabled                 metric.Counter
+	ACLBSCTPEnabled                 metric.Counter
 }
 
 const (
@@ -410,6 +411,12 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "SRv6 enabled on the agent",
 			Name:      "srv6_enabled",
+		}),
+
+		ACLBSCTPEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "SCTP enabled on the agent",
+			Name:      "sctp_enabled",
 		}),
 	}
 }
@@ -796,5 +803,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if config.EnableSRv6 {
 		m.ACLBSRv6Enabled.Add(1)
+	}
+
+	if config.EnableSCTP {
+		m.ACLBSCTPEnabled.Add(1)
 	}
 }
