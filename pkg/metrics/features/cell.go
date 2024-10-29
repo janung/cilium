@@ -9,6 +9,7 @@ import (
 	"github.com/cilium/cilium/daemon/cmd/cni"
 	"github.com/cilium/cilium/pkg/auth"
 	"github.com/cilium/cilium/pkg/ciliumenvoyconfig"
+	"github.com/cilium/cilium/pkg/datapath/linux/bigtcp"
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
 	"github.com/cilium/cilium/pkg/datapath/types"
 	"github.com/cilium/cilium/pkg/k8s"
@@ -64,4 +65,5 @@ type featuresParams struct {
 	CNIConfigManager cni.CNIConfigManager
 	MutualAuth       auth.MeshAuthConfig
 	BandwidthManager types.BandwidthManager
+	BigTCP           bigtcp.Config
 }

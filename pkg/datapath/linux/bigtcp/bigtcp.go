@@ -52,12 +52,26 @@ func (def UserConfig) Flags(flags *pflag.FlagSet) {
 	flags.Bool(EnableIPv6BIGTCPFlag, def.EnableIPv6BIGTCP, "Enable IPv6 BIG TCP option which increases device's maximum GRO/GSO limits for IPv6")
 }
 
+func (def UserConfig) IsIPv4Enabled() bool {
+	return def.EnableIPv4BIGTCP
+}
+
+func (def UserConfig) IsIPv6Enabled() bool {
+	return def.EnableIPv6BIGTCP
+}
+
+type Config interface {
+	IsIPv4Enabled() bool
+	IsIPv6Enabled() bool
+}
+
 var Cell = cell.Module(
 	"bigtcp",
 	"BIG TCP support",
 
 	cell.Config(defaultUserConfig),
-	cell.Provide(newBIGTCP),
+	cell.Provide(newBIGTCP,
+		func(c UserConfig) Config { return c }),
 	cell.Invoke(func(*Configuration) {}),
 )
 

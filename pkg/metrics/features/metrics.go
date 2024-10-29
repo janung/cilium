@@ -77,6 +77,7 @@ type Metrics struct {
 	ACLBCiliumClusterwideEnvoyConfigIngested metric.Counter
 	ACLBCiliumClusterwideEnvoyConfigPresent  metric.Gauge
 	ACLBVTEPEnabled                          metric.Counter
+	ACLBBigTCPEnabled                        metric.Vec[metric.Counter]
 }
 
 const (
@@ -483,6 +484,14 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "VTEP enabled on the agent",
 			Name:      "vtep_enabled",
+		}),
+
+		ACLBBigTCPEnabled: metric.NewCounterVecWithLabels(metric.CounterOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "Big TCP enabled on the agent",
+			Name:      "big_tcp_enabled",
+		}, metric.Labels{
+			{Name: "protocol", Values: metric.NewValues("ipv4-only", "ipv6-only", "ipv4-ipv6-dual-stack")},
 		}),
 	}
 }
@@ -922,5 +931,19 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if config.EnableVTEP {
 		m.ACLBVTEPEnabled.Add(1)
+	}
+
+	ip = ""
+	switch {
+	case params.BigTCP.IsIPv4Enabled() && params.BigTCP.IsIPv6Enabled():
+		ip = "ipv4-ipv6-dual-stack"
+	case params.BigTCP.IsIPv4Enabled():
+		ip = "ipv4-only"
+	case params.BigTCP.IsIPv6Enabled():
+		ip = "ipv6-only"
+	}
+
+	if ip != "" {
+		m.ACLBBigTCPEnabled.WithLabelValues(ip).Add(1)
 	}
 }
