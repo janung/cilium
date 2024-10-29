@@ -56,6 +56,7 @@ type Metrics struct {
 	NPSNIAllowListPresent       metric.Gauge
 	NPHTTPHeaderMatchesIngested metric.Counter
 	NPHTTPHeaderMatchesPresent  metric.Gauge
+	NPNonDefaultDenyEnabled     metric.Counter
 	NPNonDefaultDenyIngested    metric.Counter
 	NPNonDefaultDenyPresent     metric.Gauge
 
@@ -336,6 +337,12 @@ func newMetrics() Metrics {
 			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "HTTP HeaderMatches Policies are currently present in the agent",
 			Name:      "http_header_matches_policies_present",
+		}),
+
+		NPNonDefaultDenyEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Non DefaultDeny Policies is enabled in the agent",
+			Name:      "non_defaultdeny_policies_enabled",
 		}),
 
 		NPNonDefaultDenyIngested: metric.NewGauge(metric.GaugeOpts{
@@ -982,5 +989,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if params.DynamicConfigSource.IsNodeConfig() {
 		m.ACLBCiliumNodeConfigEnabled.Add(1)
+	}
+
+	if config.EnableNonDefaultDenyPolicies {
+		m.NPNonDefaultDenyEnabled.Add(1)
 	}
 }
