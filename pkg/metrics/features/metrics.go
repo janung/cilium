@@ -15,54 +15,54 @@ import (
 )
 
 type Metrics struct {
-	DPMode                        metric.Vec[metric.Gauge]
-	DPIPAM                        metric.Vec[metric.Gauge]
-	DPChaining                    metric.Vec[metric.Gauge]
-	DPIP                          metric.Vec[metric.Gauge]
-	DPIdentityAllocation          metric.Vec[metric.Gauge]
-	DPCiliumEndpointSlicesEnabled metric.Gauge
-	DPDeviceMode                  metric.Vec[metric.Gauge]
+	DPMode                        metric.Vec[metric.Counter]
+	DPIPAM                        metric.Vec[metric.Counter]
+	DPChaining                    metric.Vec[metric.Counter]
+	DPIP                          metric.Vec[metric.Counter]
+	DPIdentityAllocation          metric.Vec[metric.Counter]
+	DPCiliumEndpointSlicesEnabled metric.Counter
+	DPDeviceMode                  metric.Vec[metric.Counter]
 
-	NPHostFirewallEnabled        metric.Gauge
-	NPLocalRedirectPolicyEnabled metric.Gauge
-	NPMutualAuthEnabled          metric.Gauge
+	NPHostFirewallEnabled        metric.Counter
+	NPLocalRedirectPolicyEnabled metric.Counter
+	NPMutualAuthEnabled          metric.Counter
 
-	NPL3L4Ingested              metric.Gauge
+	NPL3L4Ingested              metric.Counter
 	NPL3L4Present               metric.Gauge
-	NPCCNPIngested              metric.Gauge
+	NPCCNPIngested              metric.Counter
 	NPCCNPPresent               metric.Gauge
-	NPHostNPIngested            metric.Gauge
+	NPHostNPIngested            metric.Counter
 	NPHostNPPresent             metric.Gauge
-	NPDNSIngested               metric.Gauge
+	NPDNSIngested               metric.Counter
 	NPDNSPresent                metric.Gauge
-	NPHTTPIngested              metric.Gauge
+	NPHTTPIngested              metric.Counter
 	NPHTTPPresent               metric.Gauge
-	NPOtherL7Ingested           metric.Gauge
+	NPOtherL7Ingested           metric.Counter
 	NPOtherL7Present            metric.Gauge
-	NPLRPIngested               metric.Gauge
+	NPLRPIngested               metric.Counter
 	NPLRPPresent                metric.Gauge
-	NPDenyPoliciesIngested      metric.Gauge
+	NPDenyPoliciesIngested      metric.Counter
 	NPDenyPoliciesPresent       metric.Gauge
-	NPIngressCIDRGroupIngested  metric.Gauge
+	NPIngressCIDRGroupIngested  metric.Counter
 	NPIngressCIDRGroupPresent   metric.Gauge
-	NPMutualAuthIngested        metric.Gauge
+	NPMutualAuthIngested        metric.Counter
 	NPMutualAuthPresent         metric.Gauge
-	NPTLSInspectionIngested     metric.Gauge
+	NPTLSInspectionIngested     metric.Counter
 	NPTLSInspectionPresent      metric.Gauge
-	NPSNIAllowListIngested      metric.Gauge
+	NPSNIAllowListIngested      metric.Counter
 	NPSNIAllowListPresent       metric.Gauge
-	NPHTTPHeaderMatchesIngested metric.Gauge
+	NPHTTPHeaderMatchesIngested metric.Counter
 	NPHTTPHeaderMatchesPresent  metric.Gauge
-	NPNonDefaultDenyIngested    metric.Gauge
+	NPNonDefaultDenyIngested    metric.Counter
 	NPNonDefaultDenyPresent     metric.Gauge
 
-	NPCIDRPoliciesToNodes           metric.Vec[metric.Gauge]
-	ACLBTransparentEncryption       metric.Vec[metric.Gauge]
-	ACLBKubeProxyReplacementEnabled metric.Gauge
-	ACLBStandaloneNSLB              metric.Vec[metric.Gauge]
-	ACLBBGPAdvertisementEnabled     metric.Gauge
-	ACLBEgressGatewayEnabled        metric.Gauge
-	ACLBBandwidthManagerEnabled     metric.Gauge
+	NPCIDRPoliciesToNodes           metric.Vec[metric.Counter]
+	ACLBTransparentEncryption       metric.Vec[metric.Counter]
+	ACLBKubeProxyReplacementEnabled metric.Counter
+	ACLBStandaloneNSLB              metric.Vec[metric.Counter]
+	ACLBBGPAdvertisementEnabled     metric.Counter
+	ACLBEgressGatewayEnabled        metric.Counter
+	ACLBBandwidthManagerEnabled     metric.Counter
 }
 
 const (
@@ -73,7 +73,7 @@ const (
 
 func newMetrics() Metrics {
 	return Metrics{
-		DPMode: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		DPMode: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Network mode enabled on the agent",
 			Name:      "network",
@@ -81,7 +81,7 @@ func newMetrics() Metrics {
 			{Name: "mode", Values: metric.NewValues("overlay-vxlan", "overlay-geneve", "direct-routing")},
 		}),
 
-		DPIPAM: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		DPIPAM: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "IPAM mode enabled on the agent",
 			Name:      "ipam",
@@ -98,7 +98,7 @@ func newMetrics() Metrics {
 			)},
 		}),
 
-		DPChaining: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		DPChaining: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Chaining mode enabled on the agent",
 			Name:      "chaining",
@@ -106,7 +106,7 @@ func newMetrics() Metrics {
 			{Name: "mode", Values: metric.NewValues("aws-vpc-cni", "flannel", "calico")},
 		}),
 
-		DPIP: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		DPIP: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "IP mode enabled on the agent",
 			Name:      "internet_protocol",
@@ -114,7 +114,7 @@ func newMetrics() Metrics {
 			{Name: "protocol", Values: metric.NewValues("ipv4-only", "ipv6-only", "ipv4-ipv6-dual-stack")},
 		}),
 
-		DPIdentityAllocation: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		DPIdentityAllocation: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Identity Allocation mode enabled on the agent",
 			Name:      "identity_allocation",
@@ -133,7 +133,7 @@ func newMetrics() Metrics {
 			Name:      "cilium_endpoint_slices_enabled",
 		}),
 
-		DPDeviceMode: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		DPDeviceMode: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Device Mode enabled on the agent",
 			Name:      "device",
@@ -332,7 +332,7 @@ func newMetrics() Metrics {
 			Name:      "non_defaultdeny_policies_present",
 		}),
 
-		NPCIDRPoliciesToNodes: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		NPCIDRPoliciesToNodes: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Mode to apply CIDR Policies",
 			Name:      "cidr_policies",
@@ -343,7 +343,7 @@ func newMetrics() Metrics {
 			)},
 		}),
 
-		ACLBTransparentEncryption: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		ACLBTransparentEncryption: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Encryption mode enabled on the agent",
 			Name:      "transparent_encryption",
@@ -364,7 +364,7 @@ func newMetrics() Metrics {
 			Name:      "kube_proxy_replacement_enabled",
 		}),
 
-		ACLBStandaloneNSLB: metric.NewGaugeVecWithLabels(metric.GaugeOpts{
+		ACLBStandaloneNSLB: metric.NewCounterVecWithLabels(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Standalone North-South Load Balancer configuration enabled on the agent",
 			Name:      "standalone_ns_lb",
@@ -430,51 +430,75 @@ func (m Metrics) AddRule(r api.Rule) {
 	rf := ruleType(r)
 
 	if rf.L3 {
-		m.NPL3L4Ingested.Set(1)
+		if m.NPL3L4Ingested.Get() == 0 {
+			m.NPL3L4Ingested.Inc()
+		}
 		m.NPL3L4Present.Inc()
 	}
 	if rf.Host {
-		m.NPHostNPIngested.Set(1)
+		if m.NPHostNPIngested.Get() == 0 {
+			m.NPHostNPIngested.Inc()
+		}
 		m.NPHostNPPresent.Inc()
 	}
 	if rf.DNS {
-		m.NPDNSIngested.Set(1)
+		if m.NPDNSIngested.Get() == 0 {
+			m.NPDNSIngested.Inc()
+		}
 		m.NPDNSPresent.Inc()
 	}
 	if rf.HTTP {
-		m.NPHTTPIngested.Set(1)
+		if m.NPHTTPIngested.Get() == 0 {
+			m.NPHTTPIngested.Inc()
+		}
 		m.NPHTTPPresent.Inc()
 	}
 	if rf.OtherL7 {
-		m.NPOtherL7Ingested.Set(1)
+		if m.NPOtherL7Ingested.Get() == 0 {
+			m.NPOtherL7Ingested.Inc()
+		}
 		m.NPOtherL7Present.Inc()
 	}
 	if rf.Deny {
-		m.NPDenyPoliciesIngested.Set(1)
+		if m.NPDenyPoliciesIngested.Get() == 0 {
+			m.NPDenyPoliciesIngested.Inc()
+		}
 		m.NPDenyPoliciesPresent.Inc()
 	}
 	if rf.IngressCIDRGroup {
-		m.NPIngressCIDRGroupIngested.Set(1)
+		if m.NPIngressCIDRGroupIngested.Get() == 0 {
+			m.NPIngressCIDRGroupIngested.Inc()
+		}
 		m.NPIngressCIDRGroupPresent.Inc()
 	}
 	if rf.MutualAuth {
-		m.NPMutualAuthIngested.Set(1)
+		if m.NPMutualAuthIngested.Get() == 0 {
+			m.NPMutualAuthIngested.Inc()
+		}
 		m.NPMutualAuthPresent.Inc()
 	}
 	if rf.TLSInspection {
-		m.NPTLSInspectionIngested.Set(1)
+		if m.NPTLSInspectionIngested.Get() == 0 {
+			m.NPTLSInspectionIngested.Inc()
+		}
 		m.NPTLSInspectionPresent.Inc()
 	}
 	if rf.SNIAllowList {
-		m.NPSNIAllowListIngested.Set(1)
+		if m.NPSNIAllowListIngested.Get() == 0 {
+			m.NPSNIAllowListIngested.Inc()
+		}
 		m.NPSNIAllowListPresent.Inc()
 	}
 	if rf.HTTPHeaderMatches {
-		m.NPHTTPHeaderMatchesIngested.Set(1)
+		if m.NPHTTPHeaderMatchesIngested.Get() == 0 {
+			m.NPHTTPHeaderMatchesIngested.Inc()
+		}
 		m.NPHTTPHeaderMatchesPresent.Inc()
 	}
 	if rf.NonDefaultDeny {
-		m.NPNonDefaultDenyIngested.Set(1)
+		if m.NPNonDefaultDenyIngested.Get() == 0 {
+			m.NPNonDefaultDenyIngested.Inc()
+		}
 		m.NPNonDefaultDenyPresent.Inc()
 	}
 }
@@ -667,7 +691,9 @@ func (m Metrics) DelRule(r api.Rule) {
 }
 
 func (m Metrics) AddConfig(cfg *redirectpolicy.LRPConfig) {
-	m.NPLRPIngested.Set(1)
+	if m.NPLRPIngested.Get() == 0 {
+		m.NPLRPIngested.Inc()
+	}
 	m.NPLRPPresent.Inc()
 }
 
@@ -704,54 +730,54 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	deviceMode := config.DatapathMode
 
-	m.DPMode.WithLabelValues(networkMode).Set(1)
-	m.DPIPAM.WithLabelValues(ipamMode).Set(1)
-	m.DPChaining.WithLabelValues(chainingMode).Set(1)
-	m.DPIP.WithLabelValues(ip).Set(1)
-	m.DPIdentityAllocation.WithLabelValues(identityAllocationMode).Set(1)
-	m.DPDeviceMode.WithLabelValues(deviceMode).Set(1)
+	m.DPMode.WithLabelValues(networkMode).Add(1)
+	m.DPIPAM.WithLabelValues(ipamMode).Add(1)
+	m.DPChaining.WithLabelValues(chainingMode).Add(1)
+	m.DPIP.WithLabelValues(ip).Add(1)
+	m.DPIdentityAllocation.WithLabelValues(identityAllocationMode).Add(1)
+	m.DPDeviceMode.WithLabelValues(deviceMode).Add(1)
 
 	if config.EnableCiliumEndpointSlice {
-		m.DPCiliumEndpointSlicesEnabled.Set(1)
+		m.DPCiliumEndpointSlicesEnabled.Add(1)
 	}
 	if config.EnableHostFirewall {
-		m.NPHostFirewallEnabled.Set(1)
+		m.NPHostFirewallEnabled.Add(1)
 	}
 	if config.EnableLocalRedirectPolicy {
-		m.NPLocalRedirectPolicyEnabled.Set(1)
+		m.NPLocalRedirectPolicyEnabled.Add(1)
 	}
 	if params.MutualAuth.IsEnabled() {
-		m.NPMutualAuthEnabled.Set(1)
+		m.NPMutualAuthEnabled.Add(1)
 	}
 	for _, mode := range config.PolicyCIDRMatchMode {
-		m.NPCIDRPoliciesToNodes.WithLabelValues(mode).Set(1)
+		m.NPCIDRPoliciesToNodes.WithLabelValues(mode).Add(1)
 	}
 	if config.EnableIPSec {
-		m.ACLBTransparentEncryption.WithLabelValues("ipsec", "false").Set(1)
+		m.ACLBTransparentEncryption.WithLabelValues("ipsec", "false").Add(1)
 	}
 	if config.EnableWireguard {
 		if config.EncryptNode {
-			m.ACLBTransparentEncryption.WithLabelValues("wireguard", "true").Set(1)
+			m.ACLBTransparentEncryption.WithLabelValues("wireguard", "true").Add(1)
 		} else {
-			m.ACLBTransparentEncryption.WithLabelValues("wireguard", "false").Set(1)
+			m.ACLBTransparentEncryption.WithLabelValues("wireguard", "false").Add(1)
 		}
 	}
 
 	if config.KubeProxyReplacement == option.KubeProxyReplacementTrue {
-		m.ACLBKubeProxyReplacementEnabled.Set(1)
+		m.ACLBKubeProxyReplacementEnabled.Add(1)
 	}
 
-	m.ACLBStandaloneNSLB.WithLabelValues(config.NodePortMode, config.NodePortAlg, config.NodePortAcceleration).Set(1)
+	m.ACLBStandaloneNSLB.WithLabelValues(config.NodePortMode, config.NodePortAlg, config.NodePortAcceleration).Add(1)
 
 	if config.BGPAnnouncePodCIDR || config.BGPAnnounceLBIP {
-		m.ACLBBGPAdvertisementEnabled.Set(1)
+		m.ACLBBGPAdvertisementEnabled.Add(1)
 	}
 
 	if config.EnableIPv4EgressGateway {
-		m.ACLBEgressGatewayEnabled.Set(1)
+		m.ACLBEgressGatewayEnabled.Add(1)
 	}
 
 	if params.BandwidthManager.Enabled() {
-		m.ACLBBandwidthManagerEnabled.Set(1)
+		m.ACLBBandwidthManagerEnabled.Add(1)
 	}
 }

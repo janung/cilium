@@ -9,7 +9,7 @@ import (
 )
 
 type Metrics struct {
-	ACLBIPAMEnabled metric.Gauge
+	ACLBIPAMEnabled metric.Counter
 }
 
 const (
@@ -18,7 +18,7 @@ const (
 
 func newMetrics() Metrics {
 	return Metrics{
-		ACLBIPAMEnabled: metric.NewGauge(metric.GaugeOpts{
+		ACLBIPAMEnabled: metric.NewCounter(metric.CounterOpts{
 			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "LB IPAM enabled on the operator",
 			Name:      "lb_ipam_enabled",
@@ -32,6 +32,6 @@ type featureMetrics interface {
 
 func (m Metrics) updateMetrics(params featuresParams) {
 	if params.LBIPAM.IsEnabled() {
-		m.ACLBIPAMEnabled.Set(1)
+		m.ACLBIPAMEnabled.Add(1)
 	}
 }
