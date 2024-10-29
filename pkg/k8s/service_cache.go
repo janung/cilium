@@ -145,10 +145,17 @@ type ServiceCache struct {
 
 	db        *statedb.DB
 	nodeAddrs statedb.Table[datapathTables.NodeAddress]
+
+	metrics SVCMetrics
+}
+
+type SVCMetrics interface {
+	AddService(svc *Service)
+	DelService(svc *Service)
 }
 
 // NewServiceCache returns a new ServiceCache
-func NewServiceCache(db *statedb.DB, nodeAddrs statedb.Table[datapathTables.NodeAddress]) *ServiceCache {
+func NewServiceCache(db *statedb.DB, nodeAddrs statedb.Table[datapathTables.NodeAddress], svcMetrics SVCMetrics) *ServiceCache {
 	events := make(chan ServiceEvent, option.Config.K8sServiceCacheSize)
 	notifications, emitNotifications, completeNotifications := stream.Multicast[ServiceNotification]()
 
@@ -163,11 +170,12 @@ func NewServiceCache(db *statedb.DB, nodeAddrs statedb.Table[datapathTables.Node
 		notifications:         notifications,
 		emitNotifications:     emitNotifications,
 		completeNotifications: completeNotifications,
+		metrics:               svcMetrics,
 	}
 }
 
-func newServiceCache(lc cell.Lifecycle, cfg ServiceCacheConfig, lns *node.LocalNodeStore, db *statedb.DB, nodeAddrs statedb.Table[datapathTables.NodeAddress]) *ServiceCache {
-	sc := NewServiceCache(db, nodeAddrs)
+func newServiceCache(lc cell.Lifecycle, cfg ServiceCacheConfig, lns *node.LocalNodeStore, db *statedb.DB, nodeAddrs statedb.Table[datapathTables.NodeAddress], metrics SVCMetrics) *ServiceCache {
+	sc := NewServiceCache(db, nodeAddrs, metrics)
 	sc.config = cfg
 
 	var wg sync.WaitGroup
@@ -351,8 +359,10 @@ func (s *ServiceCache) UpdateService(k8sSvc *slim_corev1.Service, swg *lock.Stop
 		if oldService.DeepEqual(newService) {
 			return svcID
 		}
+		s.metrics.DelService(oldService)
 	}
 
+	s.metrics.AddService(newService)
 	s.services[svcID] = newService
 
 	// Check if the corresponding Endpoints resource is already available
@@ -407,6 +417,7 @@ func (s *ServiceCache) DeleteService(k8sSvc *slim_corev1.Service, swg *lock.Stop
 	delete(s.services, svcID)
 
 	if serviceOK {
+		s.metrics.DelService(oldService)
 		swg.Add()
 		s.emitEvent(ServiceEvent{
 			Action:    DeleteService,
@@ -921,4 +932,17 @@ func (s *ServiceCache) updateSelfNodeLabels(labels map[string]string) {
 			})
 		}
 	}
+}
+
+type svcMetricsNoop struct {
+}
+
+func (s svcMetricsNoop) AddService(svc *Service) {
+}
+
+func (s svcMetricsNoop) DelService(svc *Service) {
+}
+
+func NewSVCMetricsNoop() SVCMetrics {
+	return &svcMetricsNoop{}
 }

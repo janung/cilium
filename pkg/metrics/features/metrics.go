@@ -7,6 +7,8 @@ import (
 	datapathOption "github.com/cilium/cilium/pkg/datapath/option"
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
 	ipamOption "github.com/cilium/cilium/pkg/ipam/option"
+	"github.com/cilium/cilium/pkg/k8s"
+	"github.com/cilium/cilium/pkg/loadbalancer"
 	"github.com/cilium/cilium/pkg/metrics"
 	"github.com/cilium/cilium/pkg/metrics/metric"
 	"github.com/cilium/cilium/pkg/option"
@@ -56,15 +58,18 @@ type Metrics struct {
 	NPNonDefaultDenyIngested    metric.Counter
 	NPNonDefaultDenyPresent     metric.Gauge
 
-	NPCIDRPoliciesToNodes           metric.Vec[metric.Counter]
-	ACLBTransparentEncryption       metric.Vec[metric.Counter]
-	ACLBKubeProxyReplacementEnabled metric.Counter
-	ACLBStandaloneNSLB              metric.Vec[metric.Counter]
-	ACLBBGPAdvertisementEnabled     metric.Counter
-	ACLBEgressGatewayEnabled        metric.Counter
-	ACLBBandwidthManagerEnabled     metric.Counter
-	ACLBSRv6Enabled                 metric.Counter
-	ACLBSCTPEnabled                 metric.Counter
+	NPCIDRPoliciesToNodes             metric.Vec[metric.Counter]
+	ACLBTransparentEncryption         metric.Vec[metric.Counter]
+	ACLBKubeProxyReplacementEnabled   metric.Counter
+	ACLBStandaloneNSLB                metric.Vec[metric.Counter]
+	ACLBBGPAdvertisementEnabled       metric.Counter
+	ACLBEgressGatewayEnabled          metric.Counter
+	ACLBBandwidthManagerEnabled       metric.Counter
+	ACLBSRv6Enabled                   metric.Counter
+	ACLBSCTPEnabled                   metric.Counter
+	ACLBInternalTrafficPolicyEnabled  metric.Counter
+	ACLBInternalTrafficPolicyIngested metric.Counter
+	ACLBInternalTrafficPolicyPresent  metric.Gauge
 }
 
 const (
@@ -418,6 +423,24 @@ func newMetrics() Metrics {
 			Help:      "SCTP enabled on the agent",
 			Name:      "sctp_enabled",
 		}),
+
+		ACLBInternalTrafficPolicyEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "K8s Internal Traffic Policy enabled on the agent",
+			Name:      "k8s_internal_traffic_policy_enabled",
+		}),
+
+		ACLBInternalTrafficPolicyIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "K8s Services with Internal Traffic Policy have been ingested since the agent started",
+			Name:      "internal_traffic_policy_services_ingested",
+		}),
+
+		ACLBInternalTrafficPolicyPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "K8s Services with Internal Traffic Policy are currently present in the agent",
+			Name:      "internal_traffic_policy_services_present",
+		}),
 	}
 }
 
@@ -721,6 +744,21 @@ func (m Metrics) DelConfig(cfg *redirectpolicy.LRPConfig) {
 	m.NPLRPPresent.Dec()
 }
 
+func (m Metrics) AddService(svc *k8s.Service) {
+	if svc.IntTrafficPolicy == loadbalancer.SVCTrafficPolicyLocal {
+		if m.ACLBInternalTrafficPolicyIngested.Get() == 0 {
+			m.ACLBInternalTrafficPolicyIngested.Inc()
+		}
+		m.ACLBInternalTrafficPolicyPresent.Inc()
+	}
+}
+
+func (m Metrics) DelService(svc *k8s.Service) {
+	if svc.IntTrafficPolicy == loadbalancer.SVCTrafficPolicyLocal {
+		m.ACLBInternalTrafficPolicyPresent.Dec()
+	}
+}
+
 func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfig) {
 	networkMode := "direct-routing"
 	if config.TunnelingEnabled() {
@@ -807,5 +845,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if config.EnableSCTP {
 		m.ACLBSCTPEnabled.Add(1)
+	}
+
+	if config.EnableInternalTrafficPolicy {
+		m.ACLBInternalTrafficPolicyEnabled.Add(1)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/cilium/cilium/pkg/auth"
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
 	"github.com/cilium/cilium/pkg/datapath/types"
+	"github.com/cilium/cilium/pkg/k8s"
 	"github.com/cilium/cilium/pkg/metrics"
 	"github.com/cilium/cilium/pkg/option"
 	"github.com/cilium/cilium/pkg/policy/api"
@@ -35,6 +36,9 @@ var Cell = cell.Module(
 			return m
 		},
 		func(m Metrics) redirectpolicy.LRPMetrics {
+			return m
+		},
+		func(m Metrics) k8s.SVCMetrics {
 			return m
 		},
 		newOrchestrator,

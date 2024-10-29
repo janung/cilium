@@ -37,6 +37,19 @@ import (
 	testidentity "github.com/cilium/cilium/pkg/testutils/identity"
 )
 
+type svcMetricsNoop struct {
+}
+
+func (s svcMetricsNoop) AddService(svc *k8s.Service) {
+}
+
+func (s svcMetricsNoop) DelService(svc *k8s.Service) {
+}
+
+func newSVCMetricsNoop() k8s.SVCMetrics {
+	return &svcMetricsNoop{}
+}
+
 var etcdConfig = []byte(fmt.Sprintf("endpoints:\n- %s\n", kvstore.EtcdDummyAddress()))
 
 func (s *ClusterMeshServicesTestSuite) prepareServiceUpdate(tb testing.TB, clusterID uint32, backendIP, portName string, port uint16) (string, string) {
@@ -90,7 +103,7 @@ func setup(tb testing.TB) *ClusterMeshServicesTestSuite {
 	err = db.RegisterTable(nodeAddrs)
 	require.NoError(tb, err)
 
-	s.svcCache = k8s.NewServiceCache(db, nodeAddrs)
+	s.svcCache = k8s.NewServiceCache(db, nodeAddrs, newSVCMetricsNoop())
 
 	mgr := cache.NewCachingIdentityAllocator(&testidentity.IdentityAllocatorOwnerMock{}, cache.AllocatorConfig{})
 	// The nils are only used by k8s CRD identities. We default to kvstore.
