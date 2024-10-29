@@ -9,9 +9,10 @@ import (
 )
 
 type Metrics struct {
-	ACLBIPAMEnabled              metric.Counter
-	ACLBIngressControllerEnabled metric.Counter
-	ACLBGatewayAPIEnabled        metric.Counter
+	ACLBIPAMEnabled                     metric.Counter
+	ACLBIngressControllerEnabled        metric.Counter
+	ACLBGatewayAPIEnabled               metric.Counter
+	ACLBL7AwareTrafficManagementEnabled metric.Counter
 }
 
 const (
@@ -37,6 +38,12 @@ func newMetrics() Metrics {
 			Help:      "GatewayAPI enabled on the operator",
 			Name:      "gateway_api_enabled",
 		}),
+
+		ACLBL7AwareTrafficManagementEnabled: metric.NewCounter(metric.CounterOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "L7 Aware Traffic Management enabled on the operator",
+			Name:      "l7_aware_traffic_management_enabled",
+		}),
 	}
 }
 
@@ -53,5 +60,8 @@ func (m Metrics) updateMetrics(params featuresParams) {
 	}
 	if params.OperatorOpts.EnableGatewayAPI {
 		m.ACLBGatewayAPIEnabled.Add(1)
+	}
+	if params.LBConfig.GetLoadBalancerL7() == "envoy" {
+		m.ACLBL7AwareTrafficManagementEnabled.Add(1)
 	}
 }

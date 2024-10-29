@@ -8,6 +8,7 @@ import (
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
 	ipamOption "github.com/cilium/cilium/pkg/ipam/option"
 	"github.com/cilium/cilium/pkg/k8s"
+	v2 "github.com/cilium/cilium/pkg/k8s/apis/cilium.io/v2"
 	"github.com/cilium/cilium/pkg/loadbalancer"
 	"github.com/cilium/cilium/pkg/metrics"
 	"github.com/cilium/cilium/pkg/metrics/metric"
@@ -58,18 +59,23 @@ type Metrics struct {
 	NPNonDefaultDenyIngested    metric.Counter
 	NPNonDefaultDenyPresent     metric.Gauge
 
-	NPCIDRPoliciesToNodes             metric.Vec[metric.Counter]
-	ACLBTransparentEncryption         metric.Vec[metric.Counter]
-	ACLBKubeProxyReplacementEnabled   metric.Counter
-	ACLBStandaloneNSLB                metric.Vec[metric.Counter]
-	ACLBBGPAdvertisementEnabled       metric.Counter
-	ACLBEgressGatewayEnabled          metric.Counter
-	ACLBBandwidthManagerEnabled       metric.Counter
-	ACLBSRv6Enabled                   metric.Counter
-	ACLBSCTPEnabled                   metric.Counter
-	ACLBInternalTrafficPolicyEnabled  metric.Counter
-	ACLBInternalTrafficPolicyIngested metric.Counter
-	ACLBInternalTrafficPolicyPresent  metric.Gauge
+	NPCIDRPoliciesToNodes                    metric.Vec[metric.Counter]
+	ACLBTransparentEncryption                metric.Vec[metric.Counter]
+	ACLBKubeProxyReplacementEnabled          metric.Counter
+	ACLBStandaloneNSLB                       metric.Vec[metric.Counter]
+	ACLBBGPAdvertisementEnabled              metric.Counter
+	ACLBEgressGatewayEnabled                 metric.Counter
+	ACLBBandwidthManagerEnabled              metric.Counter
+	ACLBSRv6Enabled                          metric.Counter
+	ACLBSCTPEnabled                          metric.Counter
+	ACLBInternalTrafficPolicyEnabled         metric.Counter
+	ACLBInternalTrafficPolicyIngested        metric.Counter
+	ACLBInternalTrafficPolicyPresent         metric.Gauge
+	ACLBCiliumEnvoyConfigEnabled             metric.Counter
+	ACLBCiliumEnvoyConfigIngested            metric.Counter
+	ACLBCiliumEnvoyConfigPresent             metric.Gauge
+	ACLBCiliumClusterwideEnvoyConfigIngested metric.Counter
+	ACLBCiliumClusterwideEnvoyConfigPresent  metric.Gauge
 }
 
 const (
@@ -441,6 +447,36 @@ func newMetrics() Metrics {
 			Help:      "K8s Services with Internal Traffic Policy are currently present in the agent",
 			Name:      "internal_traffic_policy_services_present",
 		}),
+
+		ACLBCiliumEnvoyConfigEnabled: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "Cilium Envoy Config enabled on the agent",
+			Name:      "cilium_envoy_config_enabled",
+		}),
+
+		ACLBCiliumEnvoyConfigIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Cilium Envoy Config have been ingested since the agent started",
+			Name:      "cilium_envoy_config_ingested",
+		}),
+
+		ACLBCiliumEnvoyConfigPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Cilium Envoy Config are currently present in the agent",
+			Name:      "cilium_envoy_config_present",
+		}),
+
+		ACLBCiliumClusterwideEnvoyConfigIngested: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Cilium Clusterwide Envoy Config have been ingested since the agent started",
+			Name:      "cilium_clusterwide_envoy_config_ingested",
+		}),
+
+		ACLBCiliumClusterwideEnvoyConfigPresent: metric.NewGauge(metric.GaugeOpts{
+			Namespace: metrics.Namespace + subsystemNP,
+			Help:      "Cilium Clusterwide Envoy Config are currently present in the agent",
+			Name:      "cilium_clusterwide_envoy_config_present",
+		}),
 	}
 }
 
@@ -759,6 +795,28 @@ func (m Metrics) DelService(svc *k8s.Service) {
 	}
 }
 
+func (m Metrics) AddCEC(cec *v2.CiliumEnvoyConfigSpec) {
+	if m.ACLBCiliumEnvoyConfigIngested.Get() == 0 {
+		m.ACLBCiliumEnvoyConfigIngested.Inc()
+	}
+	m.ACLBCiliumEnvoyConfigPresent.Inc()
+}
+
+func (m Metrics) DelCEC(cec *v2.CiliumEnvoyConfigSpec) {
+	m.ACLBCiliumEnvoyConfigPresent.Dec()
+}
+
+func (m Metrics) AddCCEC(cec *v2.CiliumEnvoyConfigSpec) {
+	if m.ACLBCiliumClusterwideEnvoyConfigIngested.Get() == 0 {
+		m.ACLBCiliumClusterwideEnvoyConfigIngested.Inc()
+	}
+	m.ACLBCiliumClusterwideEnvoyConfigPresent.Inc()
+}
+
+func (m Metrics) DelCCEC(cec *v2.CiliumEnvoyConfigSpec) {
+	m.ACLBCiliumClusterwideEnvoyConfigPresent.Dec()
+}
+
 func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfig) {
 	networkMode := "direct-routing"
 	if config.TunnelingEnabled() {
@@ -849,5 +907,9 @@ func (m Metrics) updateMetrics(params featuresParams, config *option.DaemonConfi
 
 	if config.EnableInternalTrafficPolicy {
 		m.ACLBInternalTrafficPolicyEnabled.Add(1)
+	}
+
+	if config.EnableEnvoyConfig {
+		m.ACLBCiliumEnvoyConfigEnabled.Add(1)
 	}
 }

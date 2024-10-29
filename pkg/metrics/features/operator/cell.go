@@ -7,6 +7,7 @@ import (
 	"log/slog"
 
 	operatorOption "github.com/cilium/cilium/operator/option"
+	ciliumenvoyconfig2 "github.com/cilium/cilium/operator/pkg/ciliumenvoyconfig"
 	"github.com/cilium/cilium/operator/pkg/ingress"
 	"github.com/cilium/cilium/operator/pkg/lbipam"
 	"github.com/cilium/cilium/pkg/metrics"
@@ -42,6 +43,7 @@ type featuresParams struct {
 
 	LBIPAM            lbipam.Config
 	IngressController ingress.IngressConfig
+	LBConfig          ciliumenvoyconfig2.LoadBalancerConfig
 
 	OperatorOpts *operatorOption.OperatorConfig
 }
