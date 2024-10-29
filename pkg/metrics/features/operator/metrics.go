@@ -9,7 +9,8 @@ import (
 )
 
 type Metrics struct {
-	ACLBIPAMEnabled metric.Counter
+	ACLBIPAMEnabled              metric.Counter
+	ACLBIngressControllerEnabled metric.Counter
 }
 
 const (
@@ -23,6 +24,12 @@ func newMetrics() Metrics {
 			Help:      "LB IPAM enabled on the operator",
 			Name:      "lb_ipam_enabled",
 		}),
+
+		ACLBIngressControllerEnabled: metric.NewCounter(metric.CounterOpts{
+			Namespace: metrics.Namespace + subsystemACLB,
+			Help:      "IngressController enabled on the operator",
+			Name:      "ingress_controller_enabled",
+		}),
 	}
 }
 
@@ -33,5 +40,8 @@ type featureMetrics interface {
 func (m Metrics) updateMetrics(params featuresParams) {
 	if params.LBIPAM.IsEnabled() {
 		m.ACLBIPAMEnabled.Add(1)
+	}
+	if params.IngressController.IsEnabled() {
+		m.ACLBIngressControllerEnabled.Add(1)
 	}
 }

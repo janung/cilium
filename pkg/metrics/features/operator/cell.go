@@ -6,6 +6,7 @@ package features
 import (
 	"log/slog"
 
+	"github.com/cilium/cilium/operator/pkg/ingress"
 	"github.com/cilium/cilium/operator/pkg/lbipam"
 	"github.com/cilium/cilium/pkg/metrics"
 	"github.com/cilium/hive/cell"
@@ -38,5 +39,6 @@ type featuresParams struct {
 	Lifecycle   cell.Lifecycle
 	Metrics     featureMetrics
 
-	LBIPAM lbipam.Config
+	LBIPAM            lbipam.Config
+	IngressController ingress.IngressConfig
 }
