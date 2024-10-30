@@ -170,6 +170,11 @@ jobs:
           kubectl apply -f ${{ env.CONFORMANCE_TEMPLATE }}
           kubectl wait --for=condition=Available --all deployment --timeout=${{ env.TIMEOUT }}
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Check prometheus metrics
         if: ${{ success() }}
         run: |

@@ -653,6 +653,11 @@ jobs:
             --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
             --conn-disrupt-dispatch-interval 0ms
 
+      - name: Features tested before downgrade
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested before downgrade"
+
       - name: Downgrade Cilium ${{ steps.vars.outputs.downgrade_version }}
         if: ${{ matrix.skip-upgrade != 'true' }}
         shell: bash
@@ -690,6 +695,11 @@ jobs:
             --test-concurrency=${{ env.test_concurrency }} \
             --test "!seq-.*" \
             ${{ steps.cli-flags.outputs.flags }}
+
+      - name: Features tested after downgrade
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested after downgrade"
 
       - name: Fetch artifacts
         if: ${{ !success() }}

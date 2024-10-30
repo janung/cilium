@@ -368,6 +368,11 @@ jobs:
             --kubeconfig=$HOME/.kube/config \
             2>&1 | tee cl2-output.txt
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Get sysdump
         if: ${{ always() && steps.install-cilium.outcome != 'skipped' && steps.install-cilium.outcome != 'cancelled' }}
         run: |

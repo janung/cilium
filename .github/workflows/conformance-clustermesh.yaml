@@ -578,6 +578,18 @@ jobs:
           --junit-file "cilium-junits/${{ env.job_name }} (${{ join(matrix.*, ', ') }}).xml" \
           --junit-property github_job_step="Run connectivity test (${{ join(matrix.*, ', ') }})"
 
+      - name: Features tested on cluster 1
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName1 }}"
+          title: "Summary of all features tested on cluster 1"
+
+      - name: Features tested on cluster 2
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName2 }}"
+          title: "Summary of all features tested on cluster 2"
+
       - name: Post-test information gathering
         if: ${{ !success() && steps.install-cilium-cluster1.outcome != 'skipped' }}
         run: |

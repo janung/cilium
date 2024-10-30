@@ -425,6 +425,11 @@ jobs:
             --sysdump-output-filename "cilium-sysdump-${{ matrix.name }}-<ts>" \
             --test 'packet-drops'
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Post-test information gathering
         if: ${{ !success() && steps.install-cilium.outcome != 'skipped' }}
         run: |

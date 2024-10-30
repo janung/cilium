@@ -204,6 +204,11 @@ jobs:
             --report-dir=${E2E_REPORT_DIR}                \
             --disable-log-dump=true
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Post-test information gathering
         if: ${{ !success() && steps.install-cilium.outcome != 'skipped' }}
         run: |

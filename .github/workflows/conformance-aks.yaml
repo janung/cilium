@@ -287,6 +287,11 @@ jobs:
           --junit-file "cilium-junits/${{ env.job_name }} (${{ join(matrix.*, ', ') }}) - 1.xml" \
           --junit-property github_job_step="Run connectivity test (${{ join(matrix.*, ', ') }})"
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Clean up Cilium
         run: |
           cilium uninstall --wait
@@ -314,6 +319,11 @@ jobs:
           cilium connectivity test ${{ steps.vars.outputs.connectivity_test_defaults }} --force-deploy \
           --junit-file "cilium-junits/${{ env.job_name }} (${{ join(matrix.*, ', ') }}) - 2.xml" \
           --junit-property github_job_step="Run connectivity test with IPSec (${{ join(matrix.*, ', ') }})"
+
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
 
       - name: Post-test information gathering
         if: ${{ !success() && steps.install-cilium.outcome != 'skipped' }}

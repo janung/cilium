@@ -139,6 +139,11 @@ jobs:
           image-repo: ${{ env.CILIUM_CLI_IMAGE_REPO }}
           image-tag: ${{ steps.vars.outputs.tag }}
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Report cluster failure status and capture cilium-sysdump
         if: ${{ failure() && steps.install-cilium.outcome != 'skipped' }}
         run: |

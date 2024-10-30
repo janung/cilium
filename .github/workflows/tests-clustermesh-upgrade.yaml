@@ -456,6 +456,18 @@ jobs:
             --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
             --conn-disrupt-dispatch-interval 0ms
 
+      - name: Features tested on cluster 1
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName1 }}"
+          title: "Summary of all features tested on cluster 1"
+
+      - name: Features tested on cluster 2
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName2 }}"
+          title: "Summary of all features tested on cluster 2"
+
 
       - name: Upgrade Cilium in cluster1
         env:
@@ -593,6 +605,18 @@ jobs:
             --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
             --conn-disrupt-dispatch-interval 0ms
 
+      - name: Features tested on cluster 1 - post upgrade
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName1 }}"
+          title: "Summary of all features tested on cluster 1 - post upgrade"
+
+      - name: Features tested on cluster 2 - post upgrade
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName2 }}"
+          title: "Summary of all features tested on cluster 2 - post upgrade"
+
 
       # Perform an additional "stress" test, scaling the clustermesh-apiservers in both clusters
       # to zero replicas, and restarting all agents. Existing connections should not be disrupted.
@@ -660,6 +684,18 @@ jobs:
             --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
             --conn-disrupt-dispatch-interval 0ms
 
+      - name: Features tested on cluster 1 - stress-test
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName1 }}"
+          title: "Summary of all features tested on cluster 1 - stress-test"
+
+      - name: Features tested on cluster 2 - stress-test
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName2 }}"
+          title: "Summary of all features tested on cluster 2 - stress-test"
+
 
       - name: Downgrade Cilium in cluster1 and disable kvstoremesh
         env:
@@ -695,6 +731,18 @@ jobs:
             --conn-disrupt-test-restarts-path "./cilium-conn-disrupt-restarts" \
             --junit-file "cilium-junits/${{ env.job_name }} - post downgrade (${{ join(matrix.*, ', ') }}).xml" \
             --junit-property github_job_step="Run tests post-downgrade (${{ join(matrix.*, ', ') }})"
+
+      - name: Features tested on cluster 1 - post-downgrade
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName1 }}"
+          title: "Summary of all features tested on cluster 1 - post-downgrade"
+
+      - name: Features tested on cluster 2 - post-downgrade
+        uses: ./.github/actions/feature-status
+        with:
+          cilium-cli: "cilium --context ${{ env.contextName2 }}"
+          title: "Summary of all features tested on cluster 2 - post-downgrade"
 
 
       - name: Post-test information gathering

@@ -267,6 +267,11 @@ jobs:
             --test egress-gateway \
             --flush-ct
 
+      - name: Features tested after egress gateway tests
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested after egress gateway tests"
+
       - name: Start unencrypted packets check
         uses: ./.github/actions/bpftrace/start
         with:
@@ -285,6 +290,11 @@ jobs:
             --junit-property github_job_step="Run tests (${{ join(matrix.*, ', ') }})" \
             --test '!egress-gateway' \
             --flush-ct
+
+      - name: Features tested after running all other tests
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested after all other tests"
 
       - name: Assert that no unencrypted packets are leaked
         uses: ./.github/actions/bpftrace/check
@@ -331,6 +341,11 @@ jobs:
             --test egress-gateway \
             --flush-ct
 
+      - name: Features tested after egress gateway tests after rotating ipsec keys
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested after egress gateway tests after rotating ipsec keys"
+
       - name: Start unencrypted packets check for tests
         uses: ./.github/actions/bpftrace/start
         with:
@@ -355,6 +370,11 @@ jobs:
             --junit-property github_job_step="Run tests (${{ join(matrix.*, ', ') }})" \
             --test '!egress-gateway' \
             --flush-ct $TEST
+
+      - name: Features tested after running all other tests after rotating ipsec keys
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested after all other tests after rotating ipsec keys"
 
       - name: Assert that no unencrypted packets are leaked during tests
         uses: ./.github/actions/bpftrace/check

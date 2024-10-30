@@ -330,6 +330,11 @@ jobs:
           --junit-file "cilium-junits/${{ env.job_name }} (${{ join(matrix.k8s.*, ', ') }}, ${{ join(matrix.config.*, ', ') }}).xml" \
           --junit-property github_job_step="Run connectivity test (${{ matrix.k8s.version }}, ${{ matrix.config.index }}, ${{ matrix.config.type }})"
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Post-test information gathering
         if: ${{ !success() && steps.install-cilium.outcome != 'skipped' }}
         run: |

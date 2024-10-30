@@ -190,6 +190,11 @@ jobs:
           job-name: ces-enable
           full-test: 'true'
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Fetch artifacts
         if: ${{ failure() && steps.install-cilium.outcome != 'skipped' }}
         # The following is needed to prevent hubble from receiving an empty

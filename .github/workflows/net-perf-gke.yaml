@@ -274,6 +274,11 @@ jobs:
           cilium connectivity perf --duration=30s --host-net=true --pod-net=true --report-dir=./output
           sudo chmod -R +r ./output
 
+      - name: Features tested
+        uses: ./.github/actions/feature-status
+        with:
+          title: "Summary of all features tested"
+
       - name: Get sysdump
         if: ${{ always() && steps.run-perf.outcome != 'skipped' && steps.run-perf.outcome != 'cancelled' }}
         run: |
