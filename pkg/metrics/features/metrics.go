@@ -4,9 +4,7 @@
 package features
 
 import (
-	datapathOption "github.com/cilium/cilium/pkg/datapath/option"
 	"github.com/cilium/cilium/pkg/datapath/tunnel"
-	ipamOption "github.com/cilium/cilium/pkg/ipam/option"
 	"github.com/cilium/cilium/pkg/k8s"
 	v2 "github.com/cilium/cilium/pkg/k8s/apis/cilium.io/v2"
 	"github.com/cilium/cilium/pkg/loadbalancer"
@@ -97,7 +95,7 @@ func newMetrics() Metrics {
 			Help:      "Network mode enabled on the agent",
 			Name:      "network",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues("overlay-vxlan", "overlay-geneve", "direct-routing")},
+			{Name: "mode"},
 		}),
 
 		DPIPAM: metric.NewCounterVecWithLabels(metric.CounterOpts{
@@ -105,16 +103,7 @@ func newMetrics() Metrics {
 			Help:      "IPAM mode enabled on the agent",
 			Name:      "ipam",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				ipamOption.IPAMKubernetes,
-				ipamOption.IPAMCRD,
-				ipamOption.IPAMENI,
-				ipamOption.IPAMAzure,
-				ipamOption.IPAMClusterPool,
-				ipamOption.IPAMMultiPool,
-				ipamOption.IPAMAlibabaCloud,
-				ipamOption.IPAMDelegatedPlugin,
-			)},
+			{Name: "mode"},
 		}),
 
 		DPChaining: metric.NewCounterVecWithLabels(metric.CounterOpts{
@@ -122,7 +111,7 @@ func newMetrics() Metrics {
 			Help:      "Chaining mode enabled on the agent",
 			Name:      "chaining",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues("aws-vpc-cni", "flannel", "calico")},
+			{Name: "mode"},
 		}),
 
 		DPIP: metric.NewCounterVecWithLabels(metric.CounterOpts{
@@ -130,7 +119,7 @@ func newMetrics() Metrics {
 			Help:      "IP mode enabled on the agent",
 			Name:      "internet_protocol",
 		}, metric.Labels{
-			{Name: "protocol", Values: metric.NewValues("ipv4-only", "ipv6-only", "ipv4-ipv6-dual-stack")},
+			{Name: "protocol"},
 		}),
 
 		DPIdentityAllocation: metric.NewCounterVecWithLabels(metric.CounterOpts{
@@ -138,12 +127,7 @@ func newMetrics() Metrics {
 			Help:      "Identity Allocation mode enabled on the agent",
 			Name:      "identity_allocation",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				option.IdentityAllocationModeKVstore,
-				option.IdentityAllocationModeCRD,
-				option.IdentityAllocationModeDoubleWriteReadKVstore,
-				option.IdentityAllocationModeDoubleWriteReadKVstore,
-			)},
+			{Name: "mode"},
 		}),
 
 		DPCiliumEndpointSlicesEnabled: metric.NewGauge(metric.GaugeOpts{
@@ -157,12 +141,7 @@ func newMetrics() Metrics {
 			Help:      "Device Mode enabled on the agent",
 			Name:      "device",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				datapathOption.DatapathModeVeth,
-				datapathOption.DatapathModeNetkit,
-				datapathOption.DatapathModeNetkitL2,
-				datapathOption.DatapathModeLBOnly,
-			)},
+			{Name: "mode"},
 		}),
 
 		NPHostFirewallEnabled: metric.NewGauge(metric.GaugeOpts{
@@ -362,10 +341,7 @@ func newMetrics() Metrics {
 			Help:      "Mode to apply CIDR Policies",
 			Name:      "cidr_policies",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				"world",
-				"remote-node",
-			)},
+			{Name: "mode"},
 		}),
 
 		ACLBTransparentEncryption: metric.NewCounterVecWithLabels(metric.CounterOpts{
@@ -373,14 +349,8 @@ func newMetrics() Metrics {
 			Help:      "Encryption mode enabled on the agent",
 			Name:      "transparent_encryption",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				"ipsec",
-				"wireguard",
-			)},
-			{Name: "node2node_enabled", Values: metric.NewValues(
-				"true",
-				"false",
-			)},
+			{Name: "mode"},
+			{Name: "node2node_enabled"},
 		}),
 
 		ACLBKubeProxyReplacementEnabled: metric.NewGauge(metric.GaugeOpts{
@@ -394,22 +364,9 @@ func newMetrics() Metrics {
 			Help:      "Standalone North-South Load Balancer configuration enabled on the agent",
 			Name:      "standalone_ns_lb",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				option.NodePortModeSNAT,
-				option.NodePortModeDSR,
-				option.NodePortModeAnnotation,
-				option.NodePortModeHybrid,
-			)},
-			{Name: "algorithm", Values: metric.NewValues(
-				option.NodePortAlgMaglev,
-				option.NodePortAlgRandom,
-			)},
-			{Name: "acceleration", Values: metric.NewValues(
-				option.NodePortAccelerationDisabled,
-				option.NodePortAccelerationGeneric,
-				option.NodePortAccelerationBestEffort,
-				option.NodePortAccelerationNative,
-			)},
+			{Name: "mode"},
+			{Name: "algorithm"},
+			{Name: "acceleration"},
 		}),
 
 		ACLBBGPAdvertisementEnabled: metric.NewGauge(metric.GaugeOpts{
@@ -501,7 +458,7 @@ func newMetrics() Metrics {
 			Help:      "Big TCP enabled on the agent",
 			Name:      "big_tcp_enabled",
 		}, metric.Labels{
-			{Name: "protocol", Values: metric.NewValues("ipv4-only", "ipv6-only", "ipv4-ipv6-dual-stack")},
+			{Name: "protocol"},
 		}),
 
 		ACLBL2LBEnabled: metric.NewGauge(metric.GaugeOpts{
@@ -515,7 +472,7 @@ func newMetrics() Metrics {
 			Help:      "Envoy Proxy mode enabled on the agent",
 			Name:      "envoy_proxy_enabled",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues("standalone", "embedded")},
+			{Name: "mode"},
 		}),
 
 		ACLBCiliumNodeConfigEnabled: metric.NewGauge(metric.GaugeOpts{
