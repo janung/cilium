@@ -613,7 +613,7 @@ func ruleType(r api.Rule) RuleFeatures {
 				// if len(p.Rules.DNS) > 0 {
 				// 	rf.DNS = true
 				// }
-				if len(p.Rules.HTTP) > 0 {
+				if p.Rules != nil && len(p.Rules.HTTP) > 0 {
 					rf.HTTP = true
 					if !rf.HTTPHeaderMatches {
 						for _, httpRule := range p.Rules.HTTP {
@@ -623,7 +623,7 @@ func ruleType(r api.Rule) RuleFeatures {
 						}
 					}
 				}
-				if len(p.Rules.L7) > 0 || len(p.Rules.Kafka) > 0 {
+				if p.Rules != nil && (len(p.Rules.L7) > 0 || len(p.Rules.Kafka) > 0) {
 					rf.OtherL7 = true
 				}
 				if rf.DNS && rf.HTTP && rf.OtherL7 && rf.TLSInspection && rf.SNIAllowList && rf.HTTPHeaderMatches {
@@ -680,10 +680,10 @@ func ruleType(r api.Rule) RuleFeatures {
 					if !rf.SNIAllowList && len(p.ServerNames) != 0 {
 						rf.SNIAllowList = true
 					}
-					if len(p.Rules.DNS) > 0 {
+					if p.Rules != nil && len(p.Rules.DNS) > 0 {
 						rf.DNS = true
 					}
-					if len(p.Rules.HTTP) > 0 {
+					if p.Rules != nil && len(p.Rules.HTTP) > 0 {
 						rf.HTTP = true
 						if !rf.HTTPHeaderMatches {
 							for _, httpRule := range p.Rules.HTTP {
@@ -693,7 +693,7 @@ func ruleType(r api.Rule) RuleFeatures {
 							}
 						}
 					}
-					if len(p.Rules.L7) > 0 || len(p.Rules.Kafka) > 0 {
+					if p.Rules != nil && (len(p.Rules.L7) > 0 || len(p.Rules.Kafka) > 0) {
 						rf.OtherL7 = true
 					}
 					if rf.DNS && rf.HTTP && rf.OtherL7 && rf.TLSInspection && rf.SNIAllowList && rf.HTTPHeaderMatches {
