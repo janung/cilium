@@ -74,7 +74,7 @@ type ConfigSource interface {
 func (c Config) IsNodeConfig() bool {
 	var configSources []resolver.ConfigSource
 	if c.ConfigSources != "" {
-		err := json.Unmarshal([]byte(c.ConfigSources), configSources)
+		err := json.Unmarshal([]byte(c.ConfigSources), &configSources)
 		if err != nil {
 			return false
 		}

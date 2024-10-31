@@ -33,8 +33,11 @@ func (s *Feature) PrintFeatureStatus(ctx context.Context) error {
 		return err
 	}
 
-	return printPerNodeStatusMk(nodeMap, s.params.Output)
-	// return printPerNodeStatusTabWriter(nodeMap, s.params.Output)
+	if s.params.Output == "tab" {
+		return printPerNodeStatusTabWriter(nodeMap, s.params.Output)
+	} else {
+		return printPerNodeStatusMk(nodeMap, s.params.Output)
+	}
 }
 
 func (s *Feature) fetchStatusConcurrently(ctx context.Context, pods []corev1.Pod) (map[string][]*models.Metric, error) {
@@ -193,8 +196,8 @@ func printPerNodeStatusMk(nodeMap map[string][]*models.Metric, format string) er
 	slices.Sort(nodesSorted)
 
 	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("| Uniform |"))
-	builder.WriteString(fmt.Sprintf(" Name                             | Labels                      |"))
+	builder.WriteString(fmt.Sprint("| Uniform |"))
+	builder.WriteString(fmt.Sprint(" Name                             | Labels                      |"))
 	for _, node := range nodesSorted {
 		builder.WriteString(fmt.Sprintf(" %s |", node))
 	}

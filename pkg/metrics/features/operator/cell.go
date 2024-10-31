@@ -16,8 +16,6 @@ import (
 	"github.com/cilium/hive/job"
 )
 
-const subsystem = "features"
-
 // Cell is the cell for the Operator ClusterMesh
 var Cell = cell.Module(
 	"enabled-features",
