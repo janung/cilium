@@ -24,6 +24,7 @@ type Parameters struct {
 	Writer           io.Writer
 	WaitDuration     time.Duration
 	Output           string
+	Outputfile       string
 }
 
 type Feature struct {

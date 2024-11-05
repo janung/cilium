@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strings"
@@ -33,9 +34,14 @@ func (s *Feature) PrintFeatureStatus(ctx context.Context) error {
 		return err
 	}
 
-	if s.params.Output == "tab" {
+	switch s.params.Output {
+	case "tab":
 		return printPerNodeStatusTabWriter(nodeMap, s.params.Output)
-	} else {
+	case "json":
+		return printPerNodeStatusJson(nodeMap, os.Stdout)
+	case "jsonfile":
+		return printPerNodeStatusJsonToFile(nodeMap, s.params.Outputfile)
+	default:
 		return printPerNodeStatusMk(nodeMap, s.params.Output)
 	}
 }
@@ -277,4 +283,18 @@ func parseNameAndLabels(key string) (string, string) {
 		return key[:idx], key[idx+1:]
 	}
 	return key, "" // No labels found, return an empty labels string
+}
+
+func printPerNodeStatusJson(nodeMap map[string][]*models.Metric, w io.Writer) error {
+	encoder := json.NewEncoder(w)
+	return encoder.Encode(nodeMap)
+}
+
+func printPerNodeStatusJsonToFile(nodeMap map[string][]*models.Metric, fileName string) error {
+	f, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return printPerNodeStatusJson(nodeMap, f)
 }

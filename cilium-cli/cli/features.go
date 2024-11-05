@@ -45,5 +45,6 @@ func newCmdFeaturesStatus() *cobra.Command {
 	cmd.Flags().BoolVar(&params.PerNodeDetails, "per-node-details", false, "features status will be displayed for each cluster node separately")
 	cmd.Flags().DurationVar(&params.WaitDuration, "wait-duration", 1*time.Minute, "Maximum time to wait for result, default 1 minute")
 	cmd.Flags().StringVarP(&params.Output, "output", "o", status.OutputSummary, "Output format. One of: json, summary")
+	cmd.Flags().StringVarP(&params.Outputfile, "output-file", "", status.OutputSummary, "Output format. One of: json, summary")
 	return cmd
 }

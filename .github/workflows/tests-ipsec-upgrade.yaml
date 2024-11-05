@@ -372,6 +372,7 @@ jobs:
         uses: ./.github/actions/feature-status
         with:
           title: "Summary of all features tested before downgrade"
+          json-filename: "${{ env.job_name }} (${{ join(matrix.*, ', ') - before downgrade"
 
       - name: Downgrade Cilium to ${{ steps.vars.outputs.downgrade_version }} (${{ join(matrix.*, ', ') }})
         if: ${{ steps.vars.outputs.downgrade_version != '' }}
@@ -409,6 +410,7 @@ jobs:
         uses: ./.github/actions/feature-status
         with:
           title: "Summary of all features tested after downgrade"
+          json-filename: "${{ env.job_name }} (${{ join(matrix.*, ', ') - after downgrade"
 
       - name: Fetch artifacts
         if: ${{ steps.vars.outputs.downgrade_version != '' && !success() }}
@@ -432,6 +434,13 @@ jobs:
         with:
           name: cilium-junits-${{ matrix.name }}-${{ matrix.mode }}
           path: cilium-junits/*.xml
+
+      - name: Upload features tested
+        if: ${{ always() }}
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: features-tested-${{ matrix.name }}-${{ matrix.mode }}
+          path: ${{ env.job_name }}*.json
 
       - name: Publish Test Results As GitHub Summary
         if: ${{ steps.vars.outputs.downgrade_version != '' && always() }}
@@ -461,6 +470,12 @@ jobs:
         with:
           name: cilium-junits
           pattern: cilium-junits-*
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Merge Features tested
+        uses: ./.github/actions/merge-artifacts
+        with:
+          name: features-tested
+          pattern: features-tested-*
           token: ${{ secrets.GITHUB_TOKEN }}
 
   commit-status-final:

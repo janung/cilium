@@ -9,6 +9,9 @@ inputs:
   title:
     required: true
     description: 'Title for the summary description'
+  json-filename:
+    required: true
+    description: 'Title for the JSON filename (without .json extension)'
 
 runs:
   using: composite
@@ -25,3 +28,5 @@ runs:
         echo ""                                        >> "$GITHUB_STEP_SUMMARY"
         ${{ inputs.cilium-cli }} features status       >> "$GITHUB_STEP_SUMMARY"
         echo "</details>"                              >> "$GITHUB_STEP_SUMMARY"
+
+        ${{ inputs.cilium-cli }} features status -o jsonfile --output-file="${{ inputs.json-filename }}.json"
