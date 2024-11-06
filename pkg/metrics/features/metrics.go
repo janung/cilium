@@ -85,442 +85,606 @@ type Metrics struct {
 }
 
 const (
-	subsystemDP   = "_feature_datapath"
-	subsystemNP   = "_feature_network_policies"
-	subsystemACLB = "_feature_adv_connect_and_lb"
+	subsystemDP   = "feature_datapath"
+	subsystemNP   = "feature_network_policies"
+	subsystemACLB = "feature_adv_connect_and_lb"
 )
 
-func newMetrics() Metrics {
+func NewMetrics(withDefaults bool) Metrics {
 	return Metrics{
 		DPMode: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Network mode enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemDP,
 			Name:      "network",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues("overlay-vxlan", "overlay-geneve", "direct-routing")},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					"overlay-vxlan",
+					"overlay-geneve",
+					"direct-routing",
+				)
+			}(),
+			},
 		}),
 
 		DPIPAM: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "IPAM mode enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemDP,
 			Name:      "ipam",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				ipamOption.IPAMKubernetes,
-				ipamOption.IPAMCRD,
-				ipamOption.IPAMENI,
-				ipamOption.IPAMAzure,
-				ipamOption.IPAMClusterPool,
-				ipamOption.IPAMMultiPool,
-				ipamOption.IPAMAlibabaCloud,
-				ipamOption.IPAMDelegatedPlugin,
-			)},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					ipamOption.IPAMKubernetes,
+					ipamOption.IPAMCRD,
+					ipamOption.IPAMENI,
+					ipamOption.IPAMAzure,
+					ipamOption.IPAMClusterPool,
+					ipamOption.IPAMMultiPool,
+					ipamOption.IPAMAlibabaCloud,
+					ipamOption.IPAMDelegatedPlugin,
+				)
+			}(),
+			},
 		}),
 
 		DPChaining: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Chaining mode enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemDP,
 			Name:      "chaining",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues("aws-vpc-cni", "flannel", "calico")},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					"aws-vpc-cni",
+					"flannel",
+					"calico",
+				)
+			}(),
+			},
 		}),
 
 		DPIP: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "IP mode enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemDP,
 			Name:      "internet_protocol",
 		}, metric.Labels{
-			{Name: "protocol", Values: metric.NewValues("ipv4-only", "ipv6-only", "ipv4-ipv6-dual-stack")},
+			{Name: "protocol", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					"ipv4-only",
+					"ipv6-only",
+					"ipv4-ipv6-dual-stack",
+				)
+			}(),
+			},
 		}),
 
 		DPIdentityAllocation: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Identity Allocation mode enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemDP,
 			Name:      "identity_allocation",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				option.IdentityAllocationModeKVstore,
-				option.IdentityAllocationModeCRD,
-				option.IdentityAllocationModeDoubleWriteReadKVstore,
-				option.IdentityAllocationModeDoubleWriteReadKVstore,
-			)},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					option.IdentityAllocationModeKVstore,
+					option.IdentityAllocationModeCRD,
+					option.IdentityAllocationModeDoubleWriteReadKVstore,
+					option.IdentityAllocationModeDoubleWriteReadKVstore,
+				)
+			}(),
+			},
 		}),
 
 		DPCiliumEndpointSlicesEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Cilium Endpoint Slices enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemDP,
 			Name:      "cilium_endpoint_slices_enabled",
 		}),
 
 		DPDeviceMode: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemDP,
 			Help:      "Device Mode enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemDP,
 			Name:      "device",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				datapathOption.DatapathModeVeth,
-				datapathOption.DatapathModeNetkit,
-				datapathOption.DatapathModeNetkitL2,
-				datapathOption.DatapathModeLBOnly,
-			)},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					datapathOption.DatapathModeVeth,
+					datapathOption.DatapathModeNetkit,
+					datapathOption.DatapathModeNetkitL2,
+					datapathOption.DatapathModeLBOnly,
+				)
+			}(),
+			},
 		}),
 
 		NPHostFirewallEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Host firewall enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "host_firewall_enabled",
 		}),
 
 		NPLocalRedirectPolicyEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Local Redirect Policy enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "local_redirect_policy_enabled",
 		}),
 
 		NPMutualAuthEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Mutual Auth enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "mutual_auth_enabled",
 		}),
 
 		NPL3L4Ingested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Layer 3 and Layer 4 policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "l3_l4_policies_ingested",
 		}),
 
 		NPL3L4Present: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Number of Layer 3 and Layer 4 policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "l3_l4_policies_present",
 		}),
 
 		NPCCNPIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Cilium Clusterwide Network Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "cilium_clusterwide_network_policies_ingested",
 		}),
 
 		NPCCNPPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Cilium Clusterwide Network Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "cilium_clusterwide_network_policies_present",
 		}),
 
 		NPHostNPIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Host Network Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "host_network_policies_ingested",
 		}),
 
 		NPHostNPPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Host Network Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "host_network_policies_present",
 		}),
 
 		NPDNSIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "DNS Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "dns_policies_ingested",
 		}),
 
 		NPDNSPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "DNS Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "dns_policies_present",
 		}),
 
 		NPHTTPIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "HTTP/GRPC Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "http_policies_ingested",
 		}),
 
 		NPHTTPPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "HTTP/GRPC Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "http_policies_present",
 		}),
 
 		NPOtherL7Ingested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Other L7 Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "other_l7_policies_ingested",
 		}),
 
 		NPOtherL7Present: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Other L7 Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "other_l7_policies_present",
 		}),
 
 		NPLRPIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Local Redirect Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "local_redirect_policies_ingested",
 		}),
 
 		NPLRPPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Local Redirect Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "local_redirect_policies_present",
 		}),
 
 		NPDenyPoliciesIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Deny Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "deny_policies_ingested",
 		}),
 
 		NPDenyPoliciesPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Deny Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "deny_policies_present",
 		}),
 
 		NPIngressCIDRGroupIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Ingress CIDR Group Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "ingress_cidr_group_policies_ingested",
 		}),
 
 		NPIngressCIDRGroupPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Ingress CIDR Group Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "ingress_cidr_group_policies_present",
 		}),
 
 		NPMutualAuthIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Mutual Auth Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "mutual_auth_policies_ingested",
 		}),
 
 		NPMutualAuthPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Mutual Auth Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "mutual_auth_policies_present",
 		}),
 
 		NPTLSInspectionIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "TLS Inspection Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "tls_inspection_policies_ingested",
 		}),
 
 		NPTLSInspectionPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "TLS Inspection Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "tls_inspection_policies_present",
 		}),
 
 		NPSNIAllowListIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "SNI Allow List Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "sni_allow_list_policies_ingested",
 		}),
 
 		NPSNIAllowListPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "SNI Allow List Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "sni_allow_list_policies_present",
 		}),
 
 		NPHTTPHeaderMatchesIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "HTTP HeaderMatches Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "http_header_matches_policies_ingested",
 		}),
 
 		NPHTTPHeaderMatchesPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "HTTP HeaderMatches Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "http_header_matches_policies_present",
 		}),
 
 		NPNonDefaultDenyEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Non DefaultDeny Policies is enabled in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "non_defaultdeny_policies_enabled",
 		}),
 
 		NPNonDefaultDenyIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Non DefaultDeny Policies have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "non_defaultdeny_policies_ingested",
 		}),
 
 		NPNonDefaultDenyPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Non DefaultDeny Policies are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "non_defaultdeny_policies_present",
 		}),
 
 		NPCIDRPoliciesToNodes: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Mode to apply CIDR Policies",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "cidr_policies",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				"world",
-				"remote-node",
-			)},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					"world",
+					"remote-node",
+				)
+			}(),
+			},
 		}),
 
 		ACLBTransparentEncryption: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Encryption mode enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "transparent_encryption",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				"ipsec",
-				"wireguard",
-			)},
-			{Name: "node2node_enabled", Values: metric.NewValues(
-				"true",
-				"false",
-			)},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					"ipsec",
+					"wireguard",
+				)
+			}(),
+			},
+			{Name: "node2node_enabled", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					"true",
+					"false",
+				)
+			}(),
+			},
 		}),
 
 		ACLBKubeProxyReplacementEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "KubeProxyReplacement enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "kube_proxy_replacement_enabled",
 		}),
 
 		ACLBStandaloneNSLB: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Standalone North-South Load Balancer configuration enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "standalone_ns_lb",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues(
-				option.NodePortModeSNAT,
-				option.NodePortModeDSR,
-				option.NodePortModeAnnotation,
-				option.NodePortModeHybrid,
-			)},
-			{Name: "algorithm", Values: metric.NewValues(
-				option.NodePortAlgMaglev,
-				option.NodePortAlgRandom,
-			)},
-			{Name: "acceleration", Values: metric.NewValues(
-				option.NodePortAccelerationDisabled,
-				option.NodePortAccelerationGeneric,
-				option.NodePortAccelerationBestEffort,
-				option.NodePortAccelerationNative,
-			)},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					option.NodePortModeSNAT,
+					option.NodePortModeDSR,
+					option.NodePortModeAnnotation,
+					option.NodePortModeHybrid,
+				)
+			}(),
+			},
+			{Name: "algorithm", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					option.NodePortAlgMaglev,
+					option.NodePortAlgRandom,
+				)
+			}(),
+			},
+			{Name: "acceleration", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					option.NodePortAccelerationDisabled,
+					option.NodePortAccelerationGeneric,
+					option.NodePortAccelerationBestEffort,
+					option.NodePortAccelerationNative,
+				)
+			}(),
+			},
 		}),
 
 		ACLBBGPAdvertisementEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "BGP Advertisement enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "bgp_advertisement_enabled",
 		}),
 
 		ACLBEgressGatewayEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Egress Gateway enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "egress_gateway_enabled",
 		}),
 
 		ACLBBandwidthManagerEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Bandwidth Manager enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "bandwidth_manager_enabled",
 		}),
 
 		ACLBSRv6Enabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "SRv6 enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "srv6_enabled",
 		}),
 
 		ACLBSCTPEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "SCTP enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "sctp_enabled",
 		}),
 
 		ACLBInternalTrafficPolicyEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "K8s Internal Traffic Policy enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "k8s_internal_traffic_policy_enabled",
 		}),
 
 		ACLBInternalTrafficPolicyIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "K8s Services with Internal Traffic Policy have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "internal_traffic_policy_services_ingested",
 		}),
 
 		ACLBInternalTrafficPolicyPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "K8s Services with Internal Traffic Policy are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "internal_traffic_policy_services_present",
 		}),
 
 		ACLBCiliumEnvoyConfigEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Cilium Envoy Config enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "cilium_envoy_config_enabled",
 		}),
 
 		ACLBCiliumEnvoyConfigIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Cilium Envoy Config have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "cilium_envoy_config_ingested",
 		}),
 
 		ACLBCiliumEnvoyConfigPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Cilium Envoy Config are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "cilium_envoy_config_present",
 		}),
 
 		ACLBCiliumClusterwideEnvoyConfigIngested: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Cilium Clusterwide Envoy Config have been ingested since the agent started",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "cilium_clusterwide_envoy_config_ingested",
 		}),
 
 		ACLBCiliumClusterwideEnvoyConfigPresent: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemNP,
 			Help:      "Cilium Clusterwide Envoy Config are currently present in the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemNP,
 			Name:      "cilium_clusterwide_envoy_config_present",
 		}),
 
 		ACLBVTEPEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "VTEP enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "vtep_enabled",
 		}),
 
 		ACLBBigTCPEnabled: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Big TCP enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "big_tcp_enabled",
 		}, metric.Labels{
-			{Name: "protocol", Values: metric.NewValues("ipv4-only", "ipv6-only", "ipv4-ipv6-dual-stack")},
+			{Name: "protocol", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					"ipv4-only",
+					"ipv6-only",
+					"ipv4-ipv6-dual-stack",
+				)
+			}(),
+			},
 		}),
 
 		ACLBL2LBEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "L2 LB announcement enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "l2_lb_enabled",
 		}),
 
 		ACLBExternalEnvoyProxyEnabled: metric.NewCounterVecWithLabels(metric.CounterOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Envoy Proxy mode enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "envoy_proxy_enabled",
 		}, metric.Labels{
-			{Name: "mode", Values: metric.NewValues("standalone", "embedded")},
+			{Name: "mode", Values: func() metric.Values {
+				if !withDefaults {
+					return nil
+				}
+				return metric.NewValues(
+					"standalone",
+					"embedded",
+				)
+			}(),
+			},
 		}),
 
 		ACLBCiliumNodeConfigEnabled: metric.NewGauge(metric.GaugeOpts{
-			Namespace: metrics.Namespace + subsystemACLB,
 			Help:      "Cilium Node Config enabled on the agent",
+			Namespace: metrics.Namespace,
+			Subsystem: subsystemACLB,
 			Name:      "cilium_node_config_enabled",
 		}),
 	}

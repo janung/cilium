@@ -49,7 +49,9 @@ var Cell = cell.Module(
 		},
 		newOrchestrator,
 	),
-	metrics.Metric(newMetrics),
+	metrics.Metric(func() Metrics {
+		return NewMetrics(true)
+	}),
 )
 
 type featuresParams struct {
