@@ -82,6 +82,8 @@ jobs:
 
   multi-pool-ipam-conformance-test:
     name: Install and Connectivity Test
+    env:
+      job_name: "Install and Connectivity Test"
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:

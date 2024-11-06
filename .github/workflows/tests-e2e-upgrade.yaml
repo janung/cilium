@@ -657,7 +657,7 @@ jobs:
         uses: ./.github/actions/feature-status
         with:
           title: "Summary of all features tested before downgrade"
-          json-filename: "${{ env.job_name }} - before downgrade"
+          json-filename: "${{ env.job_name }} (${{ matrix.name }}) - before downgrade"
 
       - name: Downgrade Cilium ${{ steps.vars.outputs.downgrade_version }}
         if: ${{ matrix.skip-upgrade != 'true' }}
@@ -701,7 +701,7 @@ jobs:
         uses: ./.github/actions/feature-status
         with:
           title: "Summary of all features tested after downgrade"
-          json-filename: "${{ env.job_name }} - after downgrade"
+          json-filename: "${{ env.job_name }} (${{ matrix.name }}) - after downgrade"
 
       - name: Fetch artifacts
         if: ${{ !success() }}
