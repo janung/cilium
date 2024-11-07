@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright Authors of Cilium
+
+package features
+
+import (
+	"log/slog"
+
+	"github.com/cilium/hive/cell"
+	"github.com/cilium/hive/job"
+
+	"github.com/cilium/cilium/pkg/datapath/tunnel"
+	"github.com/cilium/cilium/pkg/metrics"
+	"github.com/cilium/cilium/pkg/option"
+	"github.com/cilium/cilium/pkg/promise"
+)
+
+// Cell is the cell for the Operator ClusterMesh
+var Cell = cell.Module(
+	"enabled-features",
+	"Enabled features in cilium-agent",
+
+	cell.Invoke(newOrchestrator),
+	cell.Provide(
+		func(m Metrics) featureMetrics {
+			return m
+		},
+		newOrchestrator,
+	),
+	metrics.Metric(func() Metrics {
+		return NewMetrics(true)
+	}),
+)
+
+type featuresParams struct {
+	cell.In
+
+	Log           *slog.Logger
+	JobRegistry   job.Registry
+	Health        cell.Health
+	Lifecycle     cell.Lifecycle
+	ConfigPromise promise.Promise[*option.DaemonConfig]
+	Metrics       featureMetrics
+
+	TunnelConfig tunnel.Config
+}
+
+func (fp *featuresParams) TunnelProtocol() tunnel.Protocol {
+	return fp.TunnelConfig.Protocol()
+}
+
+type enabledFeatures interface {
+	TunnelProtocol() tunnel.Protocol
+}
