@@ -34,24 +34,51 @@ type awsClusterInfo struct {
 	ImageID string `json:"ImageID"`
 }
 
+type nodes struct {
+	Items []node `json:"items"` 
+}
+
+type node struct {
+	Status nodeStatus `json:"status"`
+}
+
+type nodeStatus struct {
+	NodeInfo nodeInfo `json:"nodeInfo"`
+}
+
+type nodeInfo struct {
+	OsImage string `json:"osImage"`
+}
+
 func (k *K8sInstaller) awsRetrieveNodeImageFamily() error {
 	// setting default fallback value
 	k.params.AWS.AwsNodeImageFamily = AwsNodeImageFamilyCustom
 
-	bytes, err := k.eksctlExec("get", "nodegroup", "--cluster", k.client.ClusterName())
+//kubectl get node -o=jsonpath='{range.items[*]}{.status.nodeInfo.osImage}{"\n"}{end}'
+	bytes, err := k.Exec("kubectl", "get", "node", "-o=json")
 	if err != nil {
 		k.Log("❌ Could not detect AWS node image family, defaulted to fallback value: %s", k.params.AWS.AwsNodeImageFamily)
 		return err
 	}
 
-	clusterInfo := awsClusterInfo{}
-	if err := json.Unmarshal(bytes, &clusterInfo); err != nil {
-		return fmt.Errorf("unable to unmarshal eksctl output: %w", err)
+	nodeItems := nodes{}
+	if err := json.Unmarshal(bytes, &nodeItems); err != nil {
+		return fmt.Errorf("unable to unmarshal kubectl output: %w", err)
 	}
 
-	ami := clusterInfo.ImageID
+	for _, item := range nodeItems.Items {
+		k.Log("node image: %s", item.Status.NodeInfo.OsImage)
+	}
+
+	if len(nodeItems.Items) == 0 {
+		k.Log("node image not found!")
+		return fmt.Errorf("node image not found!!!")
+	}
+
+	ami := nodeItems.Items[0].Status.NodeInfo.OsImage
 	switch {
-	case strings.Contains("AL2_", ami):
+	case "Amazon Linux 2" == ami:
+		// Linux 5.10.197-186.748.amzn2.x86_64 #1 SMP Tue Oct 10 00:30:07 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
 		k.params.AWS.AwsNodeImageFamily = AwsNodeImageFamilyAmazonLinux2
 	case strings.Contains("AL2023", ami):
 		k.params.AWS.AwsNodeImageFamily = AwsNodeImageFamilyAmazonLinux2023
