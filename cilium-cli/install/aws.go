@@ -78,9 +78,8 @@ func (k *K8sInstaller) awsRetrieveNodeImageFamily() error {
 	ami := nodeItems.Items[0].Status.NodeInfo.OsImage
 	switch {
 	case "Amazon Linux 2" == ami:
-		// Linux 5.10.197-186.748.amzn2.x86_64 #1 SMP Tue Oct 10 00:30:07 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
 		k.params.AWS.AwsNodeImageFamily = AwsNodeImageFamilyAmazonLinux2
-	case strings.Contains("AL2023", ami):
+	case strings.Contains(ami, "Amazon Linux 2023"):
 		k.params.AWS.AwsNodeImageFamily = AwsNodeImageFamilyAmazonLinux2023
 	case strings.Contains("BOTTLEROCKET", ami):
 		k.params.AWS.AwsNodeImageFamily = AwsNodeImageFamilyBottlerocket
