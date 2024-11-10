@@ -68,7 +68,7 @@ func (k *K8sInstaller) getHelmValues() (map[string]interface{}, error) {
 			// since the CLI was assuming eth interfaces before support for AL2023 was introduced
 			helmMapOpts["egressMasqueradeInterfaces"] = "eth0"
 			if k.params.AWS.AwsNodeImageFamily == AwsNodeImageFamilyAmazonLinux2023 {
-				helmMapOpts["egressMasqueradeInterfaces"] = "ens5"
+				helmMapOpts["egressMasqueradeInterfaces"] = "ens+"
 			}
 
 		case DatapathGKE:
