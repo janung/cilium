@@ -380,6 +380,12 @@ func writeBootstrapConfigFile(config bootstrapConfig) {
 		}),
 	}
 
+	clusterRetryLimits := &envoy_config_cluster.CircuitBreakers{
+		Thresholds: []*envoy_config_cluster.CircuitBreakers_Thresholds{{
+			MaxRetries: &wrapperspb.UInt32Value{Value: 128},
+		}},
+	}
+
 	bs := &envoy_config_bootstrap.Bootstrap{
 		Node: &envoy_config_core.Node{Id: config.nodeId, Cluster: config.cluster},
 		StaticResources: &envoy_config_bootstrap.Bootstrap_StaticResources{
@@ -391,6 +397,7 @@ func writeBootstrapConfigFile(config bootstrapConfig) {
 					CleanupInterval:               &durationpb.Duration{Seconds: config.connectTimeout, Nanos: 500000000},
 					LbPolicy:                      envoy_config_cluster.Cluster_CLUSTER_PROVIDED,
 					TypedExtensionProtocolOptions: useDownstreamProtocol,
+					CircuitBreakers:               clusterRetryLimits,
 				},
 				{
 					Name:                          egressTLSClusterName,
