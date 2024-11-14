@@ -221,7 +221,7 @@ jobs:
         if: ${{ steps.vars.outputs.downgrade_version != '' }}
         uses: ./.github/actions/cilium-config
         with:
-          image-tag: ${{ steps.vars.outputs.image_tag }}
+          image-tag: ${{ steps.vars.outputs.image_tag }}-bootid-override
           chart-dir: './untrusted/cilium-downgrade/install/kubernetes/cilium'
           tunnel: ${{ matrix.tunnel }}
           endpoint-routes: ${{ matrix.endpoint-routes }}
